@@ -1,0 +1,124 @@
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+ Scan melhorado
+</button>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+       <form action ="/inicio/scanopcao/ip/rede" method="POST">{% csrf_token %}
+       <label>Ip</label>
+<input class="form-control" name="ip">
+              <label>Mascara de rede(32)</label>
+
+<select class="form-select" aria-label="Default select example" name="rede">
+  <option value="8">8</option>
+  <option value="9">9</option>
+  <option value="10">10</option>
+
+          <option value="11" >11</option>
+
+          <option value="12" >12</option>
+      <option value="13" >13</option>
+      <option value="14" >14</option>
+      <option value="15" >15</option>
+      <option value="16" >16</option>
+      <option value="17" >17</option>
+      <option value="18" >18</option>
+      <option value="19" >19</option>
+      <option value="20" >20</option>
+      <option value="21" >21</option>
+      <option value="22" >22</option>
+      <option value="23" >23</option>
+      <option value="24" >24</option>
+      <option value="25" >25</option>
+      <option value="26" >26</option>
+      <option value="27" >27</option>
+      <option value="28" >28</option>
+      <option value="29" >29</option>
+      <option value="30" >30</option>
+      <option value="31" >31</option>
+
+      <option value="32" selected>32</option>
+
+</select>
+                         <labe>versão(1)</labe>
+<p></p>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="versao" id="inlineRadio1" value="">
+  <label class="form-check-label" for="inlineRadio1" value="">Sem versão</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="versao" id="inlineRadio2" value="option2">
+  <label class="form-check-label" for="inlineRadio2" value="com">Com versão</label>
+</div>
+           <p></p>
+           <label>tipo</label>
+<p></p>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="tipo"  value="1">
+  <label class="form-check-label" for="inlineRadio1">TCP</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="tipo"  value="2">
+  <label class="form-check-label" for="inlineRadio2">UDP</label>
+</div>             <p></p> <labe>pn(1)</labe>
+<p></p>
+           <div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="pn"  value="1">
+  <label class="form-check-label" for="inlineRadio1">Com -Pn</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="pn" value="">
+  <label class="form-check-label" for="inlineRadio2">Sem -Pn</label>
+</div>
+<p></p>              <labe>so(1)</labe>
+
+<p></p>
+           <div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="so"  value="">
+  <label class="form-check-label" for="inlineRadio1">Sem Sistema Operacional</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="so" value="option2">
+  <label class="form-check-label" for="inlineRadio2">Com Sistema Operacional</label>
+</div>
+<p></p>
+
+           <label>vuln</label>
+           <p></p>
+             <div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="vuln"  value="">
+  <label class="form-check-label" for="inlineRadio1">Sem Check scripts vuln</label>
+</div>
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="vuln" value="option2">
+  <label class="form-check-label" for="inlineRadio2">Com Check scripts vuln</label>
+</div>
+<p></p>
+              <labe>portas</labe>
+<p></p>
+<input name="portas">
+
+
+
+<input class="form-control" name="rede_vpn" value="{{ rede.id }}"hidden>
+
+       <button>salvar</button>
+
+   </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>

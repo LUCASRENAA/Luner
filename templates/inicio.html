@@ -1,0 +1,70 @@
+
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+<link rel="style" type="text/css" href="/static/css/style.css">
+ {% include "cabeca.html" %}
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+<body>
+<nav class="navbar navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <img src="/docs/5.1/assets/brand/bootstrap-logo.svg" alt="" width="30" height="24" class="d-inline-block align-text-top">
+      Bootstrap
+    </a>
+
+      Rede: {{ rede.rede.rede }}
+      Pentest: {{ rede.pentest.nome }}
+  </div>
+</nav>
+
+{% for redeObjeto in redes %}
+
+{% if redeObjeto == rede %}
+Sua rede atual: {{ redeObjeto.rede.rede }}
+{% endif %}
+
+
+{% if redeObjeto != rede %}
+Rede: <a href="/inicio/{{ redeObjeto.rede.rede }}">{{ redeObjeto.rede.rede }}</a>
+{% endif %}
+<p></p>
+{% endfor %}
+<h1>IPS LIGADOS</h1>
+{% for ip in ips %}
+
+<p><img src="/static/imagem/computador.png">{{ ip.ip }}</p>
+
+{% endfor %}
+
+<h1>IPS DESLIGADOS</h1>
+{% for ip in ips_desligados %}
+
+<p><img src="/static/imagem/computador.png">{{ ip.ip }}</p>
+
+{% endfor %}
+
+<p><h1>Diretorios</h1></p>
+
+
+{% for diretorio in diretorios %}
+
+<p>{{ diretorio.ip.ip }}:{{ diretorio.porta }}{{ diretorio.path }} -- {{ diretorio.http_code }}</p>
+
+{% endfor %}
+
+ {% include "padrao_inicio.html" %}
+       {% include "ffuf.html" %}
+
+      {% include "ScanNmap.html" %}
+
+ {% include "padrao_fim.html" %}
+
+
+
+</body>
+</html>

@@ -1,0 +1,67 @@
+
+<!doctype html>
+<html lang="pt-br">
+  <head>
+  <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <style>
+      #centro
+      {
+      position: absolute;
+	left: 42%;
+	top: 20%
+      }
+
+    </style>
+
+    <title>Controle de estoque</title>
+<meta charset="UTF-8">
+
+
+<meta charset="UTF-8">
+
+    <title>Template de login, usando Bootstrap.</title>
+
+    <!-- Principal CSS do Bootstrap -->
+
+    <!-- Estilos customizados para esse template -->
+<link rel="style" type="text/css" href="/static/css/sigin.css">
+    <link rel="style" type="text/css" href="/static/css/css.css">
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.min.css">
+
+
+  </head>
+
+  <body class="text-center">
+<div id="centro">
+<div class="container">
+
+
+    <div class="card">
+  <div class="card-header">
+Login  </div>
+  <div class="card-body">
+    <blockquote class="blockquote mb-0">
+ <form action ="submit" method="post">{% csrf_token %}
+        <div align="center">
+        <Label>Usuário:</Label><p></p>
+        <input type="text" name="username"><p></p>
+        <label>Password:</label><p></p>
+        <input type="password" name="password"><p></p>
+
+
+        <button type="submit">Entrar</button>
+        </div>
+    </form>
+
+      <footer class="blockquote-footer">Data: 21/02/2021</footer>
+    </blockquote>
+  </div>
+
+</div>
+</div>
+
+  </body>
+</html>

@@ -1,0 +1,6 @@
+env/ 
+.idea/
+mydatabase
+venv/
+arquivos/ffuf/
+arquivos/nmap/

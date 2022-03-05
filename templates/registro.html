@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    {% include "cabeca.html" %}
+        {% include "padrao_inicio.html" %}
+</head>
+
+    <h1>login</h1>
+    <form action ="submit" method="post">{% csrf_token %}
+        <div align="center">
+        <Label>Usuário:</Label>
+        <input type="text" name="username">
+        <label>Password:</label>
+        <input type="password" name="password">
+
+
+
+        <button type="submit">Entrar</button>
+        </div>
+    </form>
+    {% for message in messages %}
+    <div align="center">
+    <strong>Erro</strong>{{ message }}
+        </div>
+
+    {% endfor %}
+
+</body>
+
+
+
+</html>
