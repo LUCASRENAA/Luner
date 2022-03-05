@@ -131,3 +131,19 @@ class SistemaOperacional(models.Model):
 class Sistema_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     sistema = models.ForeignKey(SistemaOperacional, models.CASCADE)
+
+
+class WhatWeb(models.Model):
+    Titulo = models.CharField(max_length=50)
+
+class WhatWebIP(models.Model):
+    whatweb = models.ForeignKey(WhatWeb, models.CASCADE)
+    nome = models.CharField(max_length=50)
+    valor = models.CharField(max_length=50)
+    ip = models.ForeignKey(IP, models.CASCADE)
+
+
+class WhatWebComandos(models.Model):
+    diretorio = models.ForeignKey(Diretorios, models.CASCADE)
+    feito = models.IntegerField(default=0)
+    arquivo = models.CharField(max_length=200)

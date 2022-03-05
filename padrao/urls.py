@@ -27,6 +27,7 @@ urlpatterns = [
                   path('registro/submit', views.submit_registro),
 
                   path('rede/', views.rede),
+                  path('whatweb/<id>', views.whatweb),
 
                   path('inicio/<rede>',views.inicio),
                   path('inicio/scanopcao/ip/rede', views.scanOpcoes),
@@ -34,6 +35,8 @@ urlpatterns = [
 
                   path('login/', views.login_user),
     path('login/submit',views.submit_login),
+
+                  path('inicio/', RedirectView.as_view(url='/inicio/WQFQWFUQWHFQWHFQWHFIWIF')),
 
                   path('',RedirectView.as_view(url='rede/'))
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

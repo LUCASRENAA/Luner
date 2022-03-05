@@ -1,0 +1,3 @@
+[
+{"target":"http://172.16.1.116:80/.htaccess","http_status":403,"request_config":{"headers":{"User-Agent":"WhatWeb/0.5.5"}},"plugins":{"HTTPServer":{"os":["Debian Linux"],"string":["Apache/2.2.22 (Debian)"]},"Country":{"string":["RESERVED"],"module":["ZZ"]},"Title":{"string":["403 Forbidden"]},"IP":{"string":["172.16.1.116"]},"Apache":{"version":["2.2.22"]}}}
+]

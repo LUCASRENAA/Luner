@@ -53,7 +53,7 @@ Rede: <a href="/inicio/{{ redeObjeto.rede.rede }}">{{ redeObjeto.rede.rede }}</a
 
 {% for diretorio in diretorios %}
 
-<p>{{ diretorio.ip.ip }}:{{ diretorio.porta }}{{ diretorio.path }} -- {{ diretorio.http_code }}</p>
+<p>{{ diretorio.ip.ip }}:{{ diretorio.porta }}{{ diretorio.path }} -- {{ diretorio.http_code }} <a href="/whatweb/{{ diretorio.id }}">Rodar WhatWeb</a></p>
 
 {% endfor %}
 

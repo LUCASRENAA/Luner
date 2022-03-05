@@ -1,10 +1,11 @@
 import datetime
 import ipaddress
+import json
 import subprocess
 
 import requests
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404, HttpResponseNotFound
 
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
@@ -25,7 +26,7 @@ import os
 # Create your views here
 #from core.models import Produto
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
-    Pentest_Rede
+    Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP
 
 
 def login_user(request):
@@ -425,6 +426,22 @@ def dirbBancoVerificar():
             break
 
 
+def WhatWebVerificar():
+
+    try:
+        scan = WhatWebComandos.objects.get(feito = 2)
+        verificarArquivoWhatWeb(scan.arquivo,scan.diretorio.ip)
+        scan.feito = 1
+        scan.save()
+    except:
+        contador = 0
+        for scan in WhatWebComandos.objects.filter(feito = 0):
+            if contador == 0:
+                contador = 1
+                scan.feito = 2
+                scan.save()
+            break
+
 def verificarArquivoFfuf(dataAgora, usuario):
     from urllib.parse import urlparse
     teste = 1
@@ -456,7 +473,10 @@ def verificarArquivoFfuf(dataAgora, usuario):
             
                             """
                             import requests
-                            r = requests.get(redirect_que_vai)
+                            headers = {
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
+
+                            r = requests.get(redirect_que_vai, headers=headers)
                             print(r.url)
                             path = urlparse(r.url).path
                             httpcode = 200
@@ -468,19 +488,80 @@ def verificarArquivoFfuf(dataAgora, usuario):
                         path = urlparse(r.url).path
 
                     try:
-                        Diretorios.objects.get(ip=ip, porta=porta, path=path)
+                        diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path)
+                        diretorio.http_code = httpcode
+                        diretorio.save()
                     except:
                         Diretorios.objects.create(ip=ip, porta=porta, path=path,http_code= httpcode)
                 if teste == 0:
                     teste = 1
         target_open.close()
-
-
+        lerRobotstxt(ip,porta)
+        lerSiteMap(ip,porta)
         scan.feito = 1
         scan.save()
+def lerSiteMap(ip,porta):
+    import requests
+    from urllib.parse import urlparse
+    ip_string = ip.ip
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
+
+    try:
+        r = requests.get("http://"+ip_string + f':{porta}/sitemap.xml', headers=headers)
+    except:
+        r = requests.get("https://"+ip_string + f':{porta}/sitemap.xml', headers=headers)
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(r.content.decode("utf-8"))
+    for child in root:
+        for subelem in child:
+            path = urlparse(subelem.text).path
+            try:
+                try:
+                    r2 = requests.get(f'http://{ip_string}:{porta}{path}', headers=headers)
+                except:
+                    r2 = requests.get(f'https://{ip_string}:{porta}{path}', headers=headers)
+
+            except:
+                continue
+            httpcode = r2.status_code
+            try:
+                diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path)
+                diretorio.http_code = httpcode
+                diretorio.save()
+            except:
+                Diretorios.objects.create(ip=ip, porta=porta, path=path, http_code=httpcode)
 
 
 
+def lerRobotstxt(ip,porta):
+    ip_string = ip.ip
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
+    try:
+        r = requests.get("http://"+ip_string + f':{porta}/robots.txt', headers=headers)
+    except:
+        r = requests.get("https://"+ip_string + f':{porta}/robots.txt', headers=headers)
+
+    print(r.content.decode("utf-8"))
+    for a in r.content.decode("utf-8").split('\n'):
+        if "Disallow" in a or 'Allow' in a:
+            print("está")
+            path = a.split(':')[1]
+            print(path)
+            path = requests.utils.unquote(path).strip()
+            try:
+                r2 = requests.get(f'https://{ip_string}:{porta}{path}', headers=headers)
+            except:
+                r2 = requests.get(f'http://{ip_string}:{porta}{path}', headers=headers)
+
+            httpcode = r2.status_code
+            try:
+                diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path)
+                diretorio.http_code = httpcode
+                diretorio.save()
+            except:
+                Diretorios.objects.create(ip=ip, porta=porta, path=path, http_code=httpcode)
 def dirbOpcoes(request):
 
 
@@ -578,3 +659,45 @@ def verificarSeExisteSeNaoCriar(ip,usuario,rede):
                                        usuario=usuario,
                                        rede=rede)
     return ip_que_vai
+
+@login_required(login_url='/login/')
+def whatweb(request,id):
+
+        Pentest_Rede.objects.get( rede=Diretorios.objects.get(id=id).ip.rede,usuario=User.objects.get(id=request.user.id))
+        data_Agora = dataAtual()
+        ip = Diretorios.objects.get(id=id).ip
+        porta = Diretorios.objects.get(id=id).porta
+        path = Diretorios.objects.get(id=id).path
+        res = os.system(f'whatweb {ip}:{porta}{path} '+   "--log-json=arquivos/whatweb/'whatweb"+data_Agora+"'")
+        comando = f'whatweb {ip}:{porta}{path} '+   "--log-json=arquivos/whatweb/'whatweb"+data_Agora+"'"
+        WhatWebComandos.objects.create(diretorio = Diretorios.objects.get(id=id),arquivo = "arquivos/whatweb/whatweb"+data_Agora)
+
+        return redirect('/inicio/')
+def verificarArquivoWhatWeb(arquivo,ip):
+    with open(arquivo) as file:
+        jsonsaida = json.load(file)
+
+
+    for jsonzinho in jsonsaida:
+        print("aqui")
+        print(jsonzinho)
+        for b in jsonzinho['plugins']:
+            # print(jsonzinho['plugins'][b])
+            for c in jsonzinho['plugins'][b]:
+                try:
+                    whatwebtitulo = WhatWeb.objects.get(Titulo =str(b))
+                except:
+                    whatwebtitulo = WhatWeb.objects.create(Titulo =str(b))
+
+                try:
+                    WhatWebIP.objects.get(whatweb=whatwebtitulo,
+                                          nome = c,
+                                          valor = jsonzinho['plugins'][b][c][0],
+                                          ip = ip)
+                except:
+                    WhatWebIP.objects.create(whatweb=whatwebtitulo,
+                                          nome=c,
+                                          valor=jsonzinho['plugins'][b][c][0],
+                                          ip=ip)
+
+                print(c)

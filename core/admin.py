@@ -2,9 +2,12 @@ from django.contrib import admin
 
 from core.models import Scan,Diretorios,IP,Rede,FfufComandos,Sistema_IP,SistemaOperacional,CVE,CVE_IP,Pentest,Pentest_Rede,Porta
 
-
+from core.models import WhatWebComandos,WhatWeb,WhatWebIP
 
 admin.site.register(Scan)
+admin.site.register(WhatWebComandos)
+admin.site.register(WhatWeb)
+admin.site.register(WhatWebIP)
 
 admin.site.register(Diretorios)
 admin.site.register(FfufComandos)
