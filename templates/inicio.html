@@ -8,63 +8,196 @@
  {% include "cabeca.html" %}
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+<script src="https://kit.fontawesome.com/7dfa415ddd.js" crossorigin="anonymous"></script>
 </head>
-<body>
-<nav class="navbar navbar-light bg-light">
-  <div class="container-fluid">
+<body >
+
+
+<nav class="navbar navbar-dark bg-dark fixed-top" >
+  <!-- Navbar content -->
+      <div class="container-fluid">
     <a class="navbar-brand" href="#">
-      <img src="/docs/5.1/assets/brand/bootstrap-logo.svg" alt="" width="30" height="24" class="d-inline-block align-text-top">
-      Bootstrap
+     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>Luner
+
     </a>
 
-      Rede: {{ rede.rede.rede }}
-      Pentest: {{ rede.pentest.nome }}
-  </div>
-</nav>
+           <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Heyyy</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+      </div>
+    </div>
+          <div align="right"><a class="navbar-brand" href="#" >
+
+<select name="select"  onchange="this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);">
 
 {% for redeObjeto in redes %}
 
 {% if redeObjeto == rede %}
-Sua rede atual: {{ redeObjeto.rede.rede }}
+  <option value="{{ redeObjeto.rede.rede }}" selected>{{ redeObjeto.rede.rede }}
+</option>
+
 {% endif %}
 
 
 {% if redeObjeto != rede %}
-Rede: <a href="/inicio/{{ redeObjeto.rede.rede }}">{{ redeObjeto.rede.rede }}</a>
+  <option value="{{ redeObjeto.rede.rede }}" >{{ redeObjeto.rede.rede }}
 {% endif %}
-<p></p>
-{% endfor %}
-<h1>IPS LIGADOS</h1>
+
+      {% endfor %}
+      </select>
+      Pentest: {{ rede.pentest.nome }}
+
+    </a></div>
+
+
+  </div>
+</nav>
+
+
+
+
+<style>
+    #Computadores
+    {
+        height: 100%;
+    }
+
+</style>
+<div id="Computadores" align="center"  style="margin-top:10%">
+    {%  if 0 == ips|length %}
+    <h1>IPS LIGADOS</h1>
+  <i class="fas fa-desktop fa-7x" >
+  </i>
+     <p></p><h2>Opa, parece que não existe nenhum ip ligado, tente um scan :)</h2>
+          {% include "ScanNmap.html" %}
+
+    {% endif %}
+    {%  if 0 != ips|length %}
+    <h1>IPS LIGADOS</h1>
+    {% endif %}
+
+
 {% for ip in ips %}
+    <i class="fas fa-desktop fa-7x" >   <p></p>          <button   class="btn btn-dark" type="button"  data-toggle="modal" data-target="#exampleModalCenter{{ ip.id }}" > IP: {{ ip.ip }}
+</button>
+</i>
 
-<p><img src="/static/imagem/computador.png">{{ ip.ip }}</p>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter{{ ip.id }}" tabindex="-1" role="dialog" aria-labelledby="#exampleModalCenter{{ ip.id }}" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{{ ip.ip }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+<h1>Portas</h1>
+          <p></p>
+  {% for porta in portas %}
+                {% if ip == porta.ip %}
+          {{ ip }}
+          {{ porta.ip }}
+                          {% if 1 == porta.ativo %}
+
+                <p>Porta: {{ porta.porta }}</p>
+                                <p>Serviço: {{ porta.servico }}</p>
+
+          <div class="container">
+  <div class="row">
+    <div class="col-sm">
+         <a href="/porta/vuln/{{ porta.id }}/1/1">Baixa</a>
+
+    </div>
+    <div class="col-sm">
+        <a  href="/porta/vuln/{{ porta.id }}/2/1">Media</a>
+
+    </div>
+    <div class="col-sm">
+    <a href="/porta/vuln/{{ porta.id }}/3/1">Alta</a>
+    </div>
+
+      <div class="col-sm">
+    <a href="/porta/vuln/{{ porta.id }}/4/1">Critica</a>
+    </div>
+  </div>
+</div>
+          {% if 1 == porta.vulneravel %}
+                                                    <p></p>
+    <a href="/porta/nao/vuln/{{ porta.id }}/4/1">naovuln</a>
+<p></p>
+                                                    <p></p>
+          <button type="button" class="btn btn-danger">          Vulnerabilidade: {{ porta.get_Tipo }}</button>
+
+
+<p></p>
+          {% endif %}
+                                  {% endif %}
+                        {% endif %}
+
+                {% endfor %}
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endfor %}
-
-<h1>IPS DESLIGADOS</h1>
-{% for ip in ips_desligados %}
-
-<p><img src="/static/imagem/computador.png">{{ ip.ip }}</p>
-
-{% endfor %}
-
-<p><h1>Diretorios</h1></p>
-
-
-{% for diretorio in diretorios %}
-
-<p>{{ diretorio.ip.ip }}:{{ diretorio.porta }}{{ diretorio.path }} -- {{ diretorio.http_code }} <a href="/whatweb/{{ diretorio.id }}">Rodar WhatWeb</a></p>
-
-{% endfor %}
+</div>
 
  {% include "padrao_inicio.html" %}
-       {% include "ffuf.html" %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
 
-      {% include "ScanNmap.html" %}
 
  {% include "padrao_fim.html" %}
 
+       {% include "ffuf.html" %}
 
 
+
+      {% include "ScanNmap.html" %}
+<p>
+
+</p>
+ <a class="navbar-brand" href="#">
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+
+                   <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#dirb">
+Ffuf
+</button>
+                  </div>
+
+                     {% include "ScanNmap.html" %}
+       {% include "ffuf.html" %}
+              </a>
+
+                        <a class="navbar-brand" href="#">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+
+            <button type="button"  class="btn btn-light" data-bs-toggle="modal" data-bs-target="#exampleModal">
+ Scan
+</button>
+                            </div>
+          </a>
+
+
+
+{% for porta in portas %}
+<p>{{ porta.porta }}</p>
+{% endfor %}
 </body>
 </html>

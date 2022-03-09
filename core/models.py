@@ -20,8 +20,7 @@ class IP(models.Model):
         Ativo = 1
     ativo = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.ip
+
     class Meta:
         ordering = ["ip"]
 
@@ -147,3 +146,33 @@ class WhatWebComandos(models.Model):
     diretorio = models.ForeignKey(Diretorios, models.CASCADE)
     feito = models.IntegerField(default=0)
     arquivo = models.CharField(max_length=200)
+
+
+
+class Dominio(models.Model):
+    nome = models.CharField(max_length=50)
+    ip = models.ForeignKey(IP, models.CASCADE)
+
+    def __str__(self):
+        return self.nome
+
+class inetNum(models.Model):
+    ipMinimo_ip = models.ForeignKey(IP, models.CASCADE, related_name="minimo")
+    ipMaximo_ip = models.ForeignKey(IP, models.CASCADE, related_name="maximo")
+
+
+class dominioinetNum(models.Model):
+    Dominio = models.ForeignKey(Dominio, models.CASCADE)
+    bloco = models.ForeignKey(inetNum, models.CASCADE)
+
+
+class spfDominio(models.Model):
+    Dominio = models.ForeignKey(Dominio, models.CASCADE)
+    vulneravel = models.IntegerField()
+    # 0 É VULNERAVEL, 1 É TRATADO COMO SUSPEITO E 2 NÃO É VULNERAVEL
+    descricao = models.CharField(max_length=50)
+
+
+class Emails(models.Model):
+    email = models.CharField(max_length=50)
+    Dominio = models.ForeignKey(Dominio, models.CASCADE)

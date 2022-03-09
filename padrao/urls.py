@@ -22,7 +22,18 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('registro/', views.registro),
+                  path('exploit/', views.exploit),
+                  path('exploit/<sessao>', views.exploit3),
+                  path('exploit2/', views.ligarMetaSploi),
+                  path('exploit3/<sessao>', views.exploit3),
 
+                  path('exploit/procurar/', views.procurarExploits),
+                  path('exploit/procurar/exploit', views.usandoExploit),
+                  path('exploit/procurar/exploit/rodar', views.rodandoExploit),
+
+                  path('dominio/<dominio>/<rede_vpn>', views.publicoDominio),
+                  path('spf/<dominio>/<rede_vpn>', views.SPF),
+                  path('emails/<dominio>/<rede_vpn>', views.EmailsFuncao),
 
                   path('registro/submit', views.submit_registro),
 
