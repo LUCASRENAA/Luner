@@ -18,18 +18,17 @@ do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas d
 
 
 ## Tela inicial, onde vai ser exibidos os ips e as portas abertas (Talvez vou colocar os diretorios aqui também)
-- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/master/static/apresentacao_git/tela_inicial_enumeracao.png?raw=true)
-- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/master/static/apresentacao_git/tela_sem_ip.png?raw=true)
+![vuln2.jpg](static/apresentacao_git/tela_inicial_enumeracao.png)
+![vuln2.jpg](static/static/apresentacao_git/tela_sem_ip.png)
 
 ### Form do nmap e do ffuf
 
-- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/master/static/apresentacao_git/ffuf.png?raw=true)
-
-- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/master/static/apresentacao_git/scanmap.png?raw=true)
+![vuln2.jpg](static/apresentacao_git/ffuf.png)
+![vuln2.jpg](static/apresentacao_git/scanmap.png)
 
 ## Tela exploração (Web shell)
 
-- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/master/static/apresentacao_git/web_shell.png?raw=true)
+![vuln2.jpg](static/apresentacao_git/web_shell.png)
 
 
 ## Como usar?
