@@ -28,7 +28,8 @@ import os
 from pymetasploit3.msfrpc import MsfRpcClient
 
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
-    Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails
+    Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails, \
+    SenhaMsfConsole
 
 
 def login_user(request):
@@ -357,10 +358,9 @@ def lerArquivoXml(dataAgora,usuario):
     for i in range(len(ip)):
         print(ip[i])
         print("testeeeee")
-        continue
-        ipObjeto = IP.objects.filter(ip=str(ip[i]),rede=rede_vpn,usuario=User.objects.get(username=usuario))
 
-        exit()
+        ipObjeto = IP.objects.get(ip=str(ip[i]),rede=rede_vpn,usuario=User.objects.get(username=usuario))
+
         ipObjeto.ativo = 1
         if True == ipaddress.ip_address(ip[i]).is_private:
                 ipObjeto.redelocal = 1
@@ -980,10 +980,9 @@ def ligarMetaSploi(request):
         def __init__(self,ip,sessao):
             self.ip =  ip
             self.sessao = sessao
-    try:
-        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
-    except:
-        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
+
     print(client.sessions.list)
 
     hosts_invadidos = []
@@ -1022,23 +1021,17 @@ def procurarExploits(request):
         def __init__(self,ip,sessao):
             self.ip =  ip
             self.sessao = sessao
-    try:
-        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
-    except:
-        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
+
 
     exploits=  client.modules.exploits
     return render(request,'exploits.html',{'exploits':exploits})
 
 @login_required(login_url='/login/')
 def exploit3(request,sessao):
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
 
-    try:
-        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
-    except:
-        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
-
-    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
     comando = request.POST.get('comando')
 
     shell = client.sessions.session(sessao)
@@ -1118,10 +1111,11 @@ def usandoExploit(request):
         def __init__(self,ip,sessao):
             self.ip =  ip
             self.sessao = sessao
-    try:
-        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
-    except:
-        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
+
+
+
 
     exploits=  client.modules.use('exploit',exploit)
     exploits_opcao = exploits.options
@@ -1176,16 +1170,13 @@ def rodandoExploit(request):
 
     saida = exploit.execute(payload=payload)
     print(saida)
-    return HttpResponse(saida)
+    return redirect('/exploit2/')
 
 
 @login_required(login_url='/login/')
 def exploit3(request,sessao):
 
-    try:
-        client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
-    except:
-        os.system('msfrpcd -P Z1rS5DW#9N1e -S')
+
 
     client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
     comando = request.POST.get('comando')
@@ -1199,3 +1190,13 @@ def exploit3(request,sessao):
     dados = {"saida": str(shell.read()),
              "sessao": sessao}
     return render(request,'shell.html',dados)
+
+def LigarMetaexploit():
+    try:
+        client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
+
+    except:
+        SenhaMsfConsole.objects.create(id=1,
+                                       senha ="Z1rS5DW#9N1e" )
+        os.system(f'msfrpcd -P {SenhaMsfConsole.objects.get(id=1).senha} -S')
+

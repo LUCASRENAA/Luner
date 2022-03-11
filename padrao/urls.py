@@ -23,7 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('registro/', views.registro),
                   path('exploit/', views.exploit),
-                  path('exploit/<sessao>', views.exploit3),
                   path('exploit2/', views.ligarMetaSploi),
                   path('exploit3/<sessao>', views.exploit3),
 

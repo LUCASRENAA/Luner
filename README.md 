@@ -1,0 +1,39 @@
+
+
+# Luner
+## O aplicativo para pentesters
+
+Hey, o luner é uma aplicação web feita em Python (Django), para automatizar processos
+do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas de pentest.
+
+# Requisitos
+- [x] Tela inicial
+- [x] Mostrar os ips e portas encontradas
+- [x] Integrar com o metaexploit
+- [x] WEBSHELL
+- [ ] Exibir os diretorios encontrados através do ffuf
+- [ ] Mostrar de alguma forma na tela de enumeração os ips mais vulneraveis
+- [ ] Criar tela de exploração
+- [ ] Criar tela de documentação
+
+
+## Tela inicial, onde vai ser exibidos os ips e as portas abertas (Talvez vou colocar os diretorios aqui também)
+- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/main/static/apresentacao_git/tela_inicial_enumeracao.png?raw=true)
+- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/main/static/apresentacao_git/tela_sem_ip.png?raw=true)
+
+### Form do nmap e do ffuf
+
+- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/main/static/apresentacao_git/ffuf.png?raw=true)
+
+- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/main/static/apresentacao_git/scanmap.png?raw=true)
+
+## Tela exploração (Web shell)
+
+- [x] ![alt text](https://github.com/LUCASRENAA/LunerAtualizado/blob/main/static/apresentacao_git/web_shell.png?raw=true)
+
+
+## Como usar?
+
+Ainda em desenvolvimento
+
+

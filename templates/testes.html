@@ -11,25 +11,16 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 </head>
 <body>
-
-
-
- {% include "padrao_inicio.html" %}
-
-{% for exploit in exploits %}
-
-<p>{{ exploit }}</p>
-       <form action ="/exploit/procurar/exploit" method="POST">{% csrf_token %}
-
-           <input class="form-control" name="exploit" value="{{ exploit }}">
-
-       <button>salvar</button>
-
-   </form>
-{% endfor %}
-
- {% include "padrao_fim.html" %}
-
-
+<!-- Button trigger modal -->
+<div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+    Dropdown button
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+    <li><a class="dropdown-item" href="#">Action</a></li>
+    <li><a class="dropdown-item" href="#">Another action</a></li>
+    <li><a class="dropdown-item" href="#">Something else here</a></li>
+  </ul>
+</div>
 </body>
 </html>

@@ -8,19 +8,39 @@
 </style>
 </head>
 <body style="background: #D3D3D3;">
+<div class="container">
+<div style="  border-width: high;
+  border-style: solid;
+  border-color: #000000;">
+<div style="  border-width: high;
+  border-style: solid;
+  border-color: #000000;">
+<textarea cols="5" rows="20"  class="form-control" style="height:auto!important" disabled >{{ saida }}</textarea>
 
-<textarea class="form-control" disabled >{{ saida }}</textarea>
+    </div>
+    </div>
+
    <form action ="/exploit3/{{ sessao }}" method="POST">{% csrf_token %}
 
+       <div align="center">||
+           <p>||</p>
+           <h6 >----------------------------------</h6>
+
+       </div>
 <input name="comando" class="form-control">
 <button type="/exploit3/{{ sessao }}">Salvar</button>
     </form>
+
+    {% if hosts|length == 0 %}
+    Rode exploits <a href="/exploit/procurar">Aqui</a>
+    {% endif %}
 {% for a in hosts %}
 
-{{ a.sessao }}: {{ a.ip }}
+<a href="/exploit3/{{ a.sessao }}">{{ a.sessao }}: {{ a.ip }}</a>
 <p></p>
 
 {% endfor %}
+           </div>
 
 </body>
 </html>

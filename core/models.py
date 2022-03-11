@@ -57,7 +57,7 @@ class Diretorios(models.Model):
 
 
     def __str__(self):
-        return f'{self.ip}:{self.porta}{self.path}'
+        return f'{self.ip.ip}:{self.porta}{self.path}'
 
 class Porta(models.Model):
     porta = models.IntegerField()
@@ -126,10 +126,14 @@ class Pentest_Rede(models.Model):
 class SistemaOperacional(models.Model):
     nome = models.CharField(max_length=50)
 
-
+    def __str__(self):
+        return self.nome
 class Sistema_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     sistema = models.ForeignKey(SistemaOperacional, models.CASCADE)
+
+    def __str__(self):
+        return self.sistema.nome
 
 
 class WhatWeb(models.Model):
@@ -176,3 +180,7 @@ class spfDominio(models.Model):
 class Emails(models.Model):
     email = models.CharField(max_length=50)
     Dominio = models.ForeignKey(Dominio, models.CASCADE)
+
+
+class SenhaMsfConsole(models.Model):
+    senha = models.CharField(max_length=50)
