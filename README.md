@@ -17,7 +17,7 @@ do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas d
 
 ## Tela inicial, onde vai ser exibidos os ips e as portas abertas (Talvez vou colocar os diretorios aqui também)
 ![vuln2.jpg](static/apresentacao_git/tela_inicial_enumeracao.png)
-![vuln2.jpg](static/static/apresentacao_git/tela_sem_ip.png)
+![vuln2.jpg](static/apresentacao_git/tela_sem_ip.png)
 
 ### Form do nmap e do ffuf
 
@@ -35,9 +35,3 @@ do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas d
 ## Como usar?
 
 Ainda em desenvolvimento
-
-
-
-
-<h1>alo</h1>
-

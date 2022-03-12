@@ -1,12 +1,68 @@
-{{ dominio }}
 
 
-{{ ip }}
 
-{{ spf }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
 
-{{ descricao }}
+<link rel="style" type="text/css" href="/static/css/style.css">
+ {% include "cabeca.html" %}
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+<body>
 
-{{ emails }}
+
+
+ {% include "padrao_inicio.html" %}
+
+ <div align="center">
+    <h1>{{ dominio }}: {{ ip.ip }}</h1><p></p>
+
+
+SPF:
+     <p></p>
+    {{ spf }}
+<p></p>
+    {{ descricao }}
+     <p></p>
+<p></p>
+     Entre nesse site para fazer o ataque: http://emkei.cz/
+     <p></p>
+Emails:
+     {% for email in emails %}
+<p>{{ email.email }}</p>
+     {% endfor %}
+
+{{ portas_quantidades. }}
+     <h2>Subdominios</h2>
+          {% for subdominio in subdominios %}
+<p>{{ subdominio.host }}: {{ subdominio.ip.ip }}</p>
+     {% endfor %}
 
 {{ scans }}
+     </div>
+ <p></p> {% include "computadores.html" %}
+
+ <nav class="navbar navbar-dark bg-dark" >
+  <!-- Navbar content -->
+    <a class="navbar-brand" href="#" >
+
+    </a>
+
+    <a class="navbar-brand" href="#">
+      Todos os direitos reservados
+    </a>
+    <a class="navbar-brand" href="#">
+
+    </a>
+
+
+</nav>
+
+ {% include "padrao_fim.html" %}
+
+
+</body>
+</html>

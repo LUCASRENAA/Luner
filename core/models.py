@@ -184,3 +184,10 @@ class Emails(models.Model):
 
 class SenhaMsfConsole(models.Model):
     senha = models.CharField(max_length=50)
+
+
+
+class SubDominio(models.Model):
+    Dominio = models.ForeignKey(Dominio, models.CASCADE)
+    host = models.CharField(max_length=50)
+    ip = models.ForeignKey(IP, models.CASCADE)

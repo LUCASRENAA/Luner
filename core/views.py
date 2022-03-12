@@ -29,7 +29,7 @@ from pymetasploit3.msfrpc import MsfRpcClient
 
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
     Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails, \
-    SenhaMsfConsole
+    SenhaMsfConsole, SubDominio
 
 
 def login_user(request):
@@ -109,10 +109,23 @@ def inicio(request,rede):
         ips_desligados = IP.objects.filter(ativo = 0,rede = rede_objeto)
         diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
         print(diretorios)
+        rede = Pentest_Rede.objects.filter(usuario=usuario)[0].rede.rede
 
         redes = Pentest_Rede.objects.filter(usuario=usuario)
         whatwebTotal =  WhatWebIP.objects.filter(ip__rede = rede_objeto)
-        dados = {'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.all()}
+
+        class PortasQuantidades:
+            def __init__(self, ip, quantidade):
+                self.ip = ip
+                self.quantidade = quantidade
+
+        portas_quantidades = []
+        for ips_quantidade in ips_ativos:
+            portas_quantidades.append(PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade))))
+
+
+
+        dados = {'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.all(),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
         return render(request,'inicio.html',dados)
 
 
@@ -140,6 +153,7 @@ def scanOpcoes(request):
     try:
         Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
     except:
+
         return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
     vpn = Rede.objects.get(id=rede_vpn)
 
@@ -242,12 +256,14 @@ def verificarArquivoXml(dataAgora,usuario):
     except:
         print("alo")
     #print(res)
-
-    lerArquivoXml(dataAgora,usuario)
-    scan = Scan.objects.get(dataAgora = dataAgora,
-                                    usuario = User.objects.get(username= usuario))
-    scan.feito = 1
-    scan.save()
+    try:
+        lerArquivoXml(dataAgora,usuario)
+        scan = Scan.objects.get(dataAgora = dataAgora,
+                                        usuario = User.objects.get(username= usuario))
+        scan.feito = 1
+        scan.save()
+    except:
+        pass
 
 
 
@@ -853,7 +869,7 @@ def publicoDominio(request,dominio,rede_vpn):
     except:
         emails = ""
     dados  = { "dominio": Dominio.objects.get(nome = dominio,ip__rede=vpn).nome,
-               "ip":IP.objects.get(ip = res).ip,
+               "ip":IP.objects.get(ip = res,rede=vpn).ip,
                "spf": vulneravelSpf,
                "descricao": descricaoSpf,
                "emails": emails,
@@ -862,6 +878,85 @@ def publicoDominio(request,dominio,rede_vpn):
 
     return render(request,'dominio.html',dados)
 
+
+def verDominio(request,dominio,rede):
+    usuario = User.objects.get(id=request.user.id)
+
+    if rede == "WQFQWFUQWHFQWHFQWHFIWIF":
+        try:
+            rede = Pentest_Rede.objects.filter(usuario=usuario)[0].rede.rede
+            print(rede)
+            return redirect(rede)
+        except:
+            return HttpResponse("crie uma rede associada a esse usuário")
+    else:
+        rede = requests.utils.unquote(rede)
+        try:
+            vpn = Rede.objects.get(rede=rede)
+        except:
+            return  HttpResponse("Rede não existe")
+        try:
+            rede = Pentest_Rede.objects.get(rede=vpn,usuario=usuario)
+        except:
+            return HttpResponse("crie um pentest para essa rede")
+
+    try:
+        spf = spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
+        vulneravelSpf = spf.vulneravel
+        descricaoSpf  = spf.descricao
+    except:
+        vulneravelSpf = "Ainda não sabemos"
+        descricaoSpf = "Não tem descrição"
+    try:
+        emails = Emails.objects.filter(Dominio = Dominio.objects.get(nome=dominio,ip__rede=vpn))
+    except:
+        emails = ""
+
+    bloco = dominioinetNum.objects.get(Dominio=Dominio.objects.get(nome=dominio, ip__rede=vpn)).bloco
+    ipminimo = bloco.ipMinimo_ip.ip
+    ipmaximo = bloco.ipMaximo_ip.ip
+
+    ips_vetor = []
+    ip = ipaddress.IPv4Address(ipminimo)
+    print(ip)
+    print("aquiiiii")
+    while ipaddress.IPv4Address(ip) != ipaddress.IPv4Address(ipmaximo) + 1:
+        ip_objeto = IP.objects.get(ip=ip,rede=vpn)
+        if ip_objeto.ativo == 1:
+            ips_vetor.append(ip_objeto)
+        ip = ip + 1
+
+    ips_ativos = ips_vetor
+
+    class PortasQuantidades:
+        def __init__(self,ip,quantidade):
+            self.ip =  ip
+            self.quantidade = quantidade
+    portas_quantidades = []
+    for ips_quantidade in ips_ativos:
+        portas_quantidades.append(PortasQuantidades(ips_quantidade,len(Porta.objects.filter(ip=ips_quantidade))))
+
+
+    portas = Porta.objects.all()
+
+    rede = Pentest_Rede.objects.filter(usuario=usuario)[0].rede.rede
+    diretorios = Diretorios.objects.filter(ip__rede=vpn)
+
+    redes = Pentest_Rede.objects.filter(usuario=usuario)
+    dados = {
+    "dominio": Dominio.objects.get(nome=dominio, ip__rede=vpn).nome,
+    "ip_dominio": Dominio.objects.get(nome=dominio, ip__rede=vpn).ip,
+    "spf": vulneravelSpf,
+    "descricao": descricaoSpf,
+    "emails": emails,
+        "portas":portas,
+        "ips":ips_ativos,'diretorios':diretorios,'rede':rede,'redes':redes,
+        "subdominios":SubDominio.objects.filter(Dominio = Dominio.objects.get(nome=dominio, ip__rede=vpn)),
+        "portas_quantidades":portas_quantidades
+
+    }
+
+    return render(request,'dominio.html',dados)
 
 
 def SPF(request,dominio,rede_vpn):
@@ -967,7 +1062,8 @@ def LimparEmail(dominio,vpn):
     for a in emails:
 
         try:
-            Emails.objects.get(email = a)
+            Emails.objects.get(email = a,
+                               Dominio= Dominio.objects.get(nome=dominio,ip__rede = vpn))
         except:
 
             Emails.objects.create(email = a,
@@ -1194,9 +1290,63 @@ def exploit3(request,sessao):
 def LigarMetaexploit():
     try:
         client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
+        #os.system(f'msfrpcd -P {SenhaMsfConsole.objects.get(id=1).senha} -S')
 
     except:
-        SenhaMsfConsole.objects.create(id=1,
-                                       senha ="Z1rS5DW#9N1e" )
-        os.system(f'msfrpcd -P {SenhaMsfConsole.objects.get(id=1).senha} -S')
+        try:
+            SenhaMsfConsole.objects.create(id=1,
+                                           senha ="Z1rS5DW#9N1e" )
+            os.system(f'msfrpcd -P {SenhaMsfConsole.objects.get(id=1).senha} -S')
+        except:
+            os.system(f'msfrpcd -P {SenhaMsfConsole.objects.get(id=1).senha} -S')
 
+
+def theHarvester(request,dominio,rede_vpn):
+    contador = 0
+    os.system(f'rm -f theHarvester/resultado{dominio}.xml')
+    try:
+        Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
+    except:
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
+    vpn = Rede.objects.get(id=rede_vpn)
+
+
+    res = os.system(f'theHarvester -d {dominio} -l 100 -b google -f arquivos/theHarvester/resultado{dominio}.xml')
+    time.sleep(10)
+    import xml.etree.ElementTree as ET
+    tree = ET.parse(f'arquivos/theHarvester/resultado{dominio}.xml')
+    root = tree.getroot()
+    usuario  = User.objects.get(id=request.user.id)
+
+    for child in root:
+        print(child.tag)
+        print(child.text)
+        if child.tag == 'email':
+            try:
+                Emails.objects.get(email=child.text,
+                                   Dominio=Dominio.objects.get(nome=dominio, ip__rede=vpn))
+            except:
+
+                Emails.objects.create(email=child.text,
+                                      Dominio=Dominio.objects.get(nome=dominio, ip__rede=vpn))
+
+        if child.tag == 'host':
+
+            try:
+                    print(child.find('ip').text)
+                    print(child.find('hostname').text)
+                    try:
+                        verificarSeExisteSeNaoCriar(child.find('ip').text, usuario, vpn)
+                        SubDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio, ip__rede=vpn),
+                                               host=child.find('hostname').text,
+                                               ip=IP.objects.get(ip=child.find('ip').text,rede=vpn))
+                    except:
+                        SubDominio.objects.create(Dominio=Dominio.objects.get(nome=dominio, ip__rede=vpn),
+                                               host=child.find('hostname').text,
+                                               ip=IP.objects.get(ip=child.find('ip').text, rede=vpn))
+
+            except:
+                    print(child.find('ip'))
+
+
+    return redirect('/')

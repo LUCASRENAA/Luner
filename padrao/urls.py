@@ -31,8 +31,11 @@ urlpatterns = [
                   path('exploit/procurar/exploit/rodar', views.rodandoExploit),
 
                   path('dominio/<dominio>/<rede_vpn>', views.publicoDominio),
+                  path('dominio/ver/<dominio>/<rede>', views.verDominio),
+
                   path('spf/<dominio>/<rede_vpn>', views.SPF),
                   path('emails/<dominio>/<rede_vpn>', views.EmailsFuncao),
+                  path('theHarvester/<dominio>/<rede_vpn>', views.theHarvester),
 
                   path('registro/submit', views.submit_registro),
 
