@@ -191,3 +191,18 @@ class SubDominio(models.Model):
     Dominio = models.ForeignKey(Dominio, models.CASCADE)
     host = models.CharField(max_length=50)
     ip = models.ForeignKey(IP, models.CASCADE)
+
+
+class ExploitRodar(models.Model):
+
+    nome = models.CharField(max_length=200)
+    exploit = models.CharField(max_length=100)
+    payload = models.CharField(max_length=100)
+    feito = models.IntegerField(default=0)
+
+
+class Exploit_Payload(models.Model):
+    exploit = models.ForeignKey(ExploitRodar, models.CASCADE)
+    nome = models.CharField(max_length=200)
+    conteudo = models.CharField(max_length=200)
+    tipo = models.IntegerField(default=0)

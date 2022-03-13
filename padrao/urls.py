@@ -29,6 +29,10 @@ urlpatterns = [
                   path('exploit/procurar/', views.procurarExploits),
                   path('exploit/procurar/exploit', views.usandoExploit),
                   path('exploit/procurar/exploit/rodar', views.rodandoExploit),
+                  path('exploit/procurar/exploit/rodar/rodar/', views.rodandoExploitCerto),
+
+                  path('rodarExploits/', views.verExploitsRodar),
+                  path('rodar/<id>', views.rodar),
 
                   path('dominio/<dominio>/<rede_vpn>', views.publicoDominio),
                   path('dominio/ver/<dominio>/<rede>', views.verDominio),

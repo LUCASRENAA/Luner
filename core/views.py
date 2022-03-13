@@ -29,7 +29,7 @@ from pymetasploit3.msfrpc import MsfRpcClient
 
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
     Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails, \
-    SenhaMsfConsole, SubDominio
+    SenhaMsfConsole, SubDominio, ExploitRodar, Exploit_Payload
 
 
 def login_user(request):
@@ -1236,37 +1236,80 @@ def rodandoExploit(request):
 
     exploit.execute(payload=payload)
     """
+
+@login_required(login_url='/login/')
+def rodandoExploitCerto(request):
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    objeto = ExploitRodar.objects.get(id=request.POST.get('objeto'))
+
+    exploit = client.modules.use('exploit', objeto.exploit)
+    payload = client.modules.use('payload',objeto.payload)
+
+    for requestinho in request.POST:
+        print(requestinho)
+
+        if requestinho in payload.options:
+            if request.POST.get(requestinho) != "":
+                try:
+                    payload[requestinho] = str(request.POST.get(requestinho))
+                except:
+                    try:
+                        payload[requestinho] = bool(request.POST.get(requestinho))
+                    except:
+
+                        try:
+                            payload[requestinho] = float(request.POST.get(requestinho))
+                        except:
+                            pass
+
+                Exploit_Payload.objects.create(exploit=objeto,
+                                               nome=requestinho,
+                                               conteudo=payload[requestinho],
+                                               tipo = 1)
+
+
+
+    # saida = exploit.execute(payload=payload)
+    return redirect('/rodarExploits/')
+
+
 @login_required(login_url='/login/')
 def rodandoExploit(request):
     client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
     exploit  = client.modules.use('exploit', request.POST.get('exploit'))
+    payload = client.modules.use('payload', request.POST.get('payload'))
 
+    exploit_rodar = ExploitRodar.objects.create(nome='Criado Via views.py', exploit= request.POST.get('exploit'), payload=request.POST.get('payload'))
     for requestinho in request.POST:
         print(requestinho)
-        if requestinho == "exploit":
-            continue
-        elif requestinho == "csrfmiddlewaretoken":
-            continue
-        elif requestinho == "payload":
-            payload = client.modules.use('payload', request.POST.get(requestinho))
-            continue
-        elif requestinho == "LPORT":
-            payload['LPORT'] = request.POST.get(requestinho)
-            continue
-        elif requestinho == "LHOST":
-            payload['LHOST'] = request.POST.get(requestinho)
-            continue
-        else:
-            if request.POST.get(requestinho) == "":
-                continue
-            else:
-                exploit[requestinho]=  request.POST.get(requestinho)
-    payload['LHOST'] = "172.20.1.167"
-    payload['LPORT'] = "443"
 
-    saida = exploit.execute(payload=payload)
-    print(saida)
-    return redirect('/exploit2/')
+
+
+        if requestinho in exploit.options:
+                if  request.POST.get(requestinho) != "":
+                    try:
+                        exploit[requestinho]=  request.POST.get(requestinho)
+                    except:
+                        try:
+                            exploit[requestinho]=  bool(request.POST.get(requestinho))
+                        except:
+                            exploit[requestinho]=  float(request.POST.get(requestinho))
+
+                    Exploit_Payload.objects.create(exploit=exploit_rodar,
+                                                   nome= requestinho,
+                                                   conteudo=exploit[requestinho])
+
+
+        if requestinho in payload.options:
+                if  request.POST.get(requestinho) != "":
+                    payload[requestinho]=  request.POST.get(requestinho)
+
+
+    exploits_opcao = payload.options
+    exploits_requerido = payload.missing_required
+
+    #saida = exploit.execute(payload=payload)
+    return render(request,'payloadOpcoes.html',{'exploit':exploit,'exploits':exploit.description,'opcoes':exploits_opcao,'obrigatorio':exploits_requerido,'objeto':exploit_rodar})
 
 
 @login_required(login_url='/login/')
@@ -1283,7 +1326,8 @@ def exploit3(request,sessao):
     shell.write(comando)
     print(comando)
     time.sleep(5)
-    dados = {"saida": str(shell.read()),
+    resposta = str(shell.read())
+    dados = {"saida": resposta,
              "sessao": sessao}
     return render(request,'shell.html',dados)
 
@@ -1350,3 +1394,33 @@ def theHarvester(request,dominio,rede_vpn):
 
 
     return redirect('/')
+
+
+def verExploitsRodar(request):
+    opcoes = ExploitRodar.objects.all()
+
+    return render(request,'rodarExploits.html',{'opcoes':opcoes})
+
+
+def rodar(request,id):
+    exploit_objeto = ExploitRodar.objects.get(id=id)
+
+
+
+    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+
+    exploit = client.modules.use('exploit', exploit_objeto.exploit)
+
+    conteudo_Exploit = Exploit_Payload.objects.filter(exploit=exploit_objeto, tipo=0)
+
+    for conteudo  in conteudo_Exploit:
+        exploit[conteudo.nome] = conteudo.conteudo
+    payload = client.modules.use('payload', exploit_objeto.payload)
+
+    conteudo_Payload = Exploit_Payload.objects.filter(exploit=exploit_objeto, tipo=1)
+    for conteudo  in conteudo_Payload:
+        payload[conteudo.nome] = conteudo.conteudo
+
+
+    exploit.execute(payload=payload)
+    return redirect('/exploit2')

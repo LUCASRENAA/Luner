@@ -25,7 +25,11 @@
                     {% endif %}
             {% endfor %}
 
+
+
 </h6>
+
+
         <button   class="btn btn-dark" type="button"  data-toggle="modal" data-target="#exampleModalCenter{{ ip.id }}" > IP: {{ ip.ip }}
 </button>
 
@@ -88,7 +92,14 @@
                         {% endif %}
 
                 {% endfor %}
+   <h6>Diretorios</h6>
 
+          {% for diretorio in diretorios %}
+        {% if diretorio.ip == ip %}
+          <p></p>
+        {{ diretorio }} <a href="/whatweb/{{ diretorio.id }}">rodar whatweb</a>
+        {% endif %}
+                    {% endfor %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

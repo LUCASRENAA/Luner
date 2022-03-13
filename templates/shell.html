@@ -33,7 +33,12 @@
 
     {% if hosts|length == 0 %}
     Rode exploits <a href="/exploit/procurar">Aqui</a>
+
+
     {% endif %}
+
+        Veja exploits <a href="/rodarExploits/">Aqui</a>
+
 {% for a in hosts %}
 
 <a href="/exploit3/{{ a.sessao }}">{{ a.sessao }}: {{ a.ip }}</a>
