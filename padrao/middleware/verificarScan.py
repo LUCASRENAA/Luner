@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
 
-from core.views import xmlBancoVerificar, dirbBancoVerificar, WhatWebVerificar, LigarMetaexploit
+from core.views import xmlBancoVerificar, dirbBancoVerificar, WhatWebVerificar, LigarMetaexploit, sqlmapVerificar
 
 
 class VerificarScan(MiddlewareMixin):
@@ -21,6 +21,8 @@ class VerificarScan(MiddlewareMixin):
     # Lista de IPs autorizados
     a = xmlBancoVerificar()
     b = dirbBancoVerificar()
+    b = sqlmapVerificar()
+
     c = WhatWebVerificar()
     d = LigarMetaexploit()
 

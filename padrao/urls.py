@@ -45,6 +45,8 @@ urlpatterns = [
 
                   path('rede/', views.rede),
                   path('whatweb/<id>', views.whatweb),
+                  path('parserSite/<id>', views.parserSite),
+                  path('sqlmap/<id>', views.sqlmap),
 
                   path('inicio/<rede>',views.inicio),
                   path('inicio/scanopcao/ip/rede', views.scanOpcoes),

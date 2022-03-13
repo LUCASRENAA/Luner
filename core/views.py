@@ -29,7 +29,7 @@ from pymetasploit3.msfrpc import MsfRpcClient
 
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
     Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails, \
-    SenhaMsfConsole, SubDominio, ExploitRodar, Exploit_Payload
+    SenhaMsfConsole, SubDominio, ExploitRodar, Exploit_Payload, QueryParameteres, SqlComandos
 
 
 def login_user(request):
@@ -420,10 +420,14 @@ def verificarScan():
 def dirbBancoVerificar():
 
     try:
-        scan = FfufComandos.objects.get(feito = 2)
-        verificarArquivoFfuf(scan.dataAgora, scan.usuario)
+        scan = FfufComandos.objects.filter(feito = 2)
+        for a in scan:
+            verificarArquivoFfuf(a.dataAgora, a.usuario)
 
     except:
+        scan = FfufComandos.objects.filter(feito=2)
+        for a in scan:
+            verificarArquivoFfuf(a.dataAgora, a.usuario)
         contador = 0
         for scan in FfufComandos.objects.filter(feito = 0):
             if contador == 0:
@@ -435,6 +439,28 @@ def dirbBancoVerificar():
                 scan.save()
             break
 
+
+def sqlmapVerificar():
+
+    try:
+        scan = SqlComandos.objects.filter(feito = 2)
+        for a in scan:
+            verificarArquivoNmap(a.dataAgora, a.usuario)
+
+    except:
+        scan = SqlComandos.objects.filter(feito=2)
+        for a in scan:
+            verificarArquivoNmap(a.dataAgora, a.usuario)
+        contador = 0
+        for scan in SqlComandos.objects.filter(feito = 0):
+            if contador == 0:
+                contador = 1
+
+                print(scan.usuario)
+                os.system(scan.comando)
+                scan.feito = 2
+                scan.save()
+            break
 
 def WhatWebVerificar():
 
@@ -451,6 +477,21 @@ def WhatWebVerificar():
                 scan.feito = 2
                 scan.save()
             break
+
+def verificarArquivoNmap(dataAgora, usuario):
+    from urllib.parse import urlparse
+    teste = 1
+    if teste == 1:
+        print("entrei")
+        target_file = "arquivos/ffuf/"  + str(usuario) + str(dataAgora)
+        target_open = open(target_file, 'r',encoding = "ISO-8859-1")
+
+        scan = FfufComandos.objects.get(dataAgora=dataAgora,
+                                        usuario=User.objects.get(username=usuario))
+        saida = subprocess.check_output(f'cat  {target_file} | grep "is vulnerable"',
+                                        shell=True).decode("UTF-8")
+        print(saida)
+
 
 def verificarArquivoFfuf(dataAgora, usuario):
     from urllib.parse import urlparse
@@ -496,13 +537,17 @@ def verificarArquivoFfuf(dataAgora, usuario):
                     porta = scan.porta
                     if redirect_que_vai != "":
                         path = urlparse(r.url).path
-
                     try:
-                        diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path)
-                        diretorio.http_code = httpcode
-                        diretorio.save()
+                            path_filtrar = f'{path}'.split('?')[0]
                     except:
-                        Diretorios.objects.create(ip=ip, porta=porta, path=path,http_code= httpcode)
+                            path_filtrar = path
+
+
+
+
+                    diretorio = verificarSeExisteDiretorioSeNaoCriar(ip, porta, path_filtrar, httpcode, path)
+                    alterarDiretoriosHttpCode(ip, porta, path_filtrar, httpcode, diretorio, path)
+
                 if teste == 0:
                     teste = 1
         target_open.close()
@@ -510,6 +555,51 @@ def verificarArquivoFfuf(dataAgora, usuario):
         lerSiteMap(ip,porta)
         scan.feito = 1
         scan.save()
+
+def verificarSeExisteDiretorioSeNaoCriar(ip, porta, path_filtrar, httpcode, path):
+    try:
+        diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path_filtrar)
+
+
+    except:
+
+        diretorio = criarDiretorios(ip, porta, path_filtrar, httpcode, path)
+    CriarOuPegarQueryParameteres(diretorio, path)
+    return diretorio
+
+def alterarDiretoriosHttpCode(ip,porta,path_filtrar,httpcode,diretorio,path):
+    diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path_filtrar)
+    diretorio.http_code = httpcode
+    diretorio.save()
+    return diretorio
+def criarDiretorios(ip,porta,path_filtrar,httpcode,path):
+    diretorio = Diretorios.objects.create(ip=ip, porta=porta, path=path_filtrar, http_code=httpcode)
+    try:
+        for name in path.split('?')[1].split('&'):
+            print(name.split('=')[0])
+            CriarOuPegarQueryParameteres(diretorio, name)
+
+    except:
+        return diretorio
+
+    return diretorio
+
+def CriarOuPegarQueryParameteres(diretorio,name):
+    try:
+        name = name.split('?')[1]
+    except:
+        pass
+    try:
+        try:
+            query = QueryParameteres.objects.get(diretorio=diretorio, parametro=name.split('=')[0],
+                                       )
+        except:
+            query = QueryParameteres.objects.create(diretorio=diretorio, parametro=name.split('=')[0],
+                                            valor=name.split('=')[1])
+    except:
+        query = ""
+
+    return query
 def lerSiteMap(ip,porta):
     import requests
     from urllib.parse import urlparse
@@ -522,25 +612,29 @@ def lerSiteMap(ip,porta):
     except:
         r = requests.get("https://"+ip_string + f':{porta}/sitemap.xml', headers=headers)
     import xml.etree.ElementTree as ET
-    root = ET.fromstring(r.content.decode("utf-8"))
-    for child in root:
-        for subelem in child:
-            path = urlparse(subelem.text).path
-            try:
+    try:
+        root = ET.fromstring(r.content.decode("utf-8"))
+        for child in root:
+            for subelem in child:
+                path = urlparse(subelem.text).path
                 try:
-                    r2 = requests.get(f'http://{ip_string}:{porta}{path}', headers=headers)
-                except:
-                    r2 = requests.get(f'https://{ip_string}:{porta}{path}', headers=headers)
+                    try:
+                        r2 = requests.get(f'http://{ip_string}:{porta}{path}', headers=headers)
+                    except:
+                        r2 = requests.get(f'https://{ip_string}:{porta}{path}', headers=headers)
 
-            except:
-                continue
-            httpcode = r2.status_code
-            try:
-                diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path)
-                diretorio.http_code = httpcode
-                diretorio.save()
-            except:
-                Diretorios.objects.create(ip=ip, porta=porta, path=path, http_code=httpcode)
+                except:
+                    continue
+                httpcode = r2.status_code
+                try:
+                    path_filtrar = f'{path}'.split('?'[0])
+                except:
+                    path_filtrar = path
+
+                diretorio = verificarSeExisteDiretorioSeNaoCriar(ip, porta, path_filtrar, httpcode, path)
+                alterarDiretoriosHttpCode(ip, porta, path_filtrar, httpcode, diretorio, path)
+    except:
+        pass
 
 
 
@@ -567,11 +661,17 @@ def lerRobotstxt(ip,porta):
 
             httpcode = r2.status_code
             try:
-                diretorio = Diretorios.objects.get(ip=ip, porta=porta, path=path)
-                diretorio.http_code = httpcode
-                diretorio.save()
+                path_filtrar = f'{path}'.split('?'[0])
             except:
-                Diretorios.objects.create(ip=ip, porta=porta, path=path, http_code=httpcode)
+                path_filtrar= path
+
+            diretorio = verificarSeExisteDiretorioSeNaoCriar(ip, porta, path_filtrar, httpcode, path)
+            alterarDiretoriosHttpCode(ip, porta, path_filtrar, httpcode, diretorio, path)
+
+
+
+
+
 def dirbOpcoes(request):
 
 
@@ -1424,3 +1524,96 @@ def rodar(request,id):
 
     exploit.execute(payload=payload)
     return redirect('/exploit2')
+
+
+def sqlmap(request,id):
+    data_Agora = dataAtual()
+
+    diretorio_objeto = Diretorios.objects.get(id=id)
+    ip = Diretorios.objects.get(id=id).ip.ip
+    ip_objeto = Diretorios.objects.get(id=id).ip
+    porta = Diretorios.objects.get(id=id).porta
+    path = Diretorios.objects.get(id=id).path
+
+    queryparameters = QueryParameteres.objects.filter(diretorio=diretorio_objeto)
+
+    querys = "?"
+    for query in queryparameters:
+        querys = querys + f'{query.parametro}={query.valor}&'
+    querys = querys[:-1]
+    path = path + querys
+    if porta == 443:
+        os.system(f'sqlmap -u https://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt')
+        comando = f'sqlmap -u https://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt'
+    else:
+        os.system(f'sqlmap -u http://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt')
+        comando = f'sqlmap -u http://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt'
+
+    SqlComandos.objects.create(ip=ip_objeto,
+                                dataAgora=data_Agora,
+                                usuario=request.user,
+                                comando=comando,
+                                porta=porta)
+@login_required(login_url='/login/')
+def parserSite(request,id):
+
+        Pentest_Rede.objects.get( rede=Diretorios.objects.get(id=id).ip.rede,usuario=User.objects.get(id=request.user.id))
+        data_Agora = dataAtual()
+        diretorio_objeto =  Diretorios.objects.get(id=id)
+        ip = Diretorios.objects.get(id=id).ip.ip
+        ip_objeto = Diretorios.objects.get(id=id).ip
+        porta = Diretorios.objects.get(id=id).porta
+        path = Diretorios.objects.get(id=id).path
+
+        queryparameters = QueryParameteres.objects.filter(diretorio=diretorio_objeto)
+
+        querys = "?"
+        for query in queryparameters:
+            querys=querys+f'{query.parametro}={query.valor}&'
+        querys = querys[:-1]
+        path = path + querys
+
+        from bs4 import BeautifulSoup
+        import requests
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
+        try:
+            r = requests.get(f'http://{ip}:{porta}{path}', headers=headers)
+        except:
+            r = requests.get(f'https://{ip}:{porta}{path}', headers=headers)
+
+
+        from urllib.parse import urlparse
+        soup = BeautifulSoup(r.text, 'html.parser')
+        artist_name_list_items = soup.find_all('a')
+        print(artist_name_list_items)
+        listateste = []
+        for artist_name in artist_name_list_items:
+            names = artist_name.get('href')
+            print(names)
+            if names[0] == "/":
+                path = names
+            else:
+
+                splitando = path.split('/')
+
+                variavel_tamanho = len(splitando)
+
+                splitando[variavel_tamanho - 1] = str(names)
+                voltando = ""
+                for voltar in splitando:
+                    voltando = voltando + voltar + "/"
+
+                voltando = voltando[:-1]
+                path = voltando
+
+            try:
+                    path_filtrar = f'{path}'.split('?')[0]
+                    listateste.append(f'{path}'.split('?')[1])
+            except:
+                    path_filtrar = path
+
+            diretorio = verificarSeExisteDiretorioSeNaoCriar(ip_objeto, porta, path_filtrar, 200, path)
+            alterarDiretoriosHttpCode(ip_objeto, porta, path_filtrar, 200, diretorio, path)
+
+        return redirect('/inicio/')

@@ -58,6 +58,12 @@ class Diretorios(models.Model):
 
     def __str__(self):
         return f'{self.ip.ip}:{self.porta}{self.path}'
+class QueryParameteres(models.Model):
+    diretorio = models.ForeignKey(Diretorios, models.CASCADE)
+
+    parametro = models.CharField(max_length=100)
+    valor = models.CharField(max_length=100)
+
 
 class Porta(models.Model):
     porta = models.IntegerField()
@@ -206,3 +212,16 @@ class Exploit_Payload(models.Model):
     nome = models.CharField(max_length=200)
     conteudo = models.CharField(max_length=200)
     tipo = models.IntegerField(default=0)
+
+
+class SqlComandos(models.Model):
+    ip = models.ForeignKey(IP, models.CASCADE)
+    dataAgora = models.CharField(max_length=31)
+    usuario = models.ForeignKey(User, models.CASCADE)
+    feito = models.IntegerField(default=0)
+    comando = models.CharField(max_length=300)
+    porta = models.IntegerField(validators=[MinValueValidator(1),
+                                            MaxValueValidator(65536)])
+
+    def __str__(self):
+        return self.comando

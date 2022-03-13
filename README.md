@@ -13,7 +13,8 @@ do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas d
 - [ ] Mostrar de alguma forma na tela de enumeração os ips mais vulneraveis
 - [ ] Criar tela de exploração
 - [ ] Criar tela de documentação
-
+- [x] Definir os query parameters
+- [ ] Verificar os query parameters e testar se são vulneraveis a sql injection com sqlmap
 
 ## Tela inicial, onde vai ser exibidos os ips e as portas abertas (Talvez vou colocar os diretorios aqui também)
 ![vuln2.jpg](static/apresentacao_git/tela_inicial_enumeracao.png)
