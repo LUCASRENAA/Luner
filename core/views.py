@@ -109,7 +109,6 @@ def inicio(request,rede):
         ips_desligados = IP.objects.filter(ativo = 0,rede = rede_objeto)
         diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
         print(diretorios)
-        rede = Pentest_Rede.objects.filter(usuario=usuario)[0].rede.rede
 
         redes = Pentest_Rede.objects.filter(usuario=usuario)
         whatwebTotal =  WhatWebIP.objects.filter(ip__rede = rede_objeto)
@@ -123,9 +122,9 @@ def inicio(request,rede):
         for ips_quantidade in ips_ativos:
             portas_quantidades.append(PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade))))
 
-
-
-        dados = {'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.all(),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
+        rede_pentest = Pentest_Rede.objects.get(rede=rede_objeto)
+        queryparameteres = QueryParameteres.objects.all()
+        dados = {'redepentest':rede_pentest,'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.all(),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
         return render(request,'inicio.html',dados)
 
 
@@ -442,25 +441,23 @@ def dirbBancoVerificar():
 
 def sqlmapVerificar():
 
-    try:
-        scan = SqlComandos.objects.filter(feito = 2)
-        for a in scan:
-            verificarArquivoNmap(a.dataAgora, a.usuario)
 
-    except:
-        scan = SqlComandos.objects.filter(feito=2)
-        for a in scan:
-            verificarArquivoNmap(a.dataAgora, a.usuario)
-        contador = 0
-        for scan in SqlComandos.objects.filter(feito = 0):
-            if contador == 0:
-                contador = 1
 
-                print(scan.usuario)
-                os.system(scan.comando)
-                scan.feito = 2
-                scan.save()
-            break
+
+            scan = SqlComandos.objects.filter(feito=2)
+            for a in scan:
+                verificarArquivoSqlmap(a.dataAgora, a.usuario)
+            contador = 0
+            for scan in SqlComandos.objects.filter(feito = 0):
+                if contador == 0:
+                    contador = 1
+
+                    print(scan.usuario)
+                    #os.system(scan.comando)
+                    scan.feito = 2
+                    scan.save()
+                break
+
 
 def WhatWebVerificar():
 
@@ -478,20 +475,39 @@ def WhatWebVerificar():
                 scan.save()
             break
 
-def verificarArquivoNmap(dataAgora, usuario):
+def verificarArquivoSqlmap(dataAgora, usuario):
     from urllib.parse import urlparse
     teste = 1
     if teste == 1:
         print("entrei")
-        target_file = "arquivos/ffuf/"  + str(usuario) + str(dataAgora)
+        target_file = "arquivos/sqlmap/"  + str(usuario) + str(dataAgora) +".txt"
+        print(target_file)
         target_open = open(target_file, 'r',encoding = "ISO-8859-1")
 
-        scan = FfufComandos.objects.get(dataAgora=dataAgora,
+        scan = SqlComandos.objects.get(dataAgora=dataAgora,
                                         usuario=User.objects.get(username=usuario))
-        saida = subprocess.check_output(f'cat  {target_file} | grep "is vulnerable"',
+        saida = subprocess.check_output(f'cat  "{target_file}" | grep "is vulnerable"',
                                         shell=True).decode("UTF-8")
         print(saida)
 
+        parametro = ""
+        validar = 0
+        for percorrer in saida:
+            print(percorrer)
+            if validar == 1:
+                parametro = parametro + percorrer
+            if percorrer == "'":
+                validar = validar + 1
+        parametro = parametro[:-1]
+
+        queryparameters = QueryParameteres.objects.filter(diretorio=scan.diretorio)
+
+        for query in queryparameters:
+            if str(query.parametro) == str(parametro):
+                query.vulneravel = 1
+                query.save()
+
+    scan.feito = 1
 
 def verificarArquivoFfuf(dataAgora, usuario):
     from urllib.parse import urlparse
@@ -1543,17 +1559,20 @@ def sqlmap(request,id):
     querys = querys[:-1]
     path = path + querys
     if porta == 443:
-        os.system(f'sqlmap -u https://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt')
-        comando = f'sqlmap -u https://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt'
+        comando = f'sqlmap -u "https://{ip}:{porta}{path}"  --answers="follow=Y" --batch | tee arquivos/sqlmap/"{request.user}{data_Agora}".txt '
+
+        saida_sqlmap = subprocess.check_output(comando,shell=True)
     else:
-        os.system(f'sqlmap -u http://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt')
-        comando = f'sqlmap -u http://{ip}:{porta}{path} --dbs --answers="follow=Y" --batch > arquivos/sqlmap/"{request.user}{data_Agora}".txt'
+        comando = f'sqlmap -u "http://{ip}:{porta}{path}"  --answers="follow=Y" --batch | tee arquivos/sqlmap/"{request.user}{data_Agora}".txt '
+
+        saida_sqlmap = subprocess.check_output(comando,shell=True)
 
     SqlComandos.objects.create(ip=ip_objeto,
                                 dataAgora=data_Agora,
                                 usuario=request.user,
                                 comando=comando,
-                                porta=porta)
+                                porta=porta,
+                               diretorio=diretorio_objeto)
 @login_required(login_url='/login/')
 def parserSite(request,id):
 

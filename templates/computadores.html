@@ -97,7 +97,31 @@
           {% for diretorio in diretorios %}
         {% if diretorio.ip == ip %}
           <p></p>
-        {{ diretorio }} <a href="/whatweb/{{ diretorio.id }}">rodar whatweb</a>
+        {{ diretorio }}?{% for query in queryparameteres %}
+            {% if query.diretorio.id ==  diretorio.id %}
+          {% if query.vulneravel == 1 %}
+
+
+          <button>{{ query.parametro }}</button>={{ query.valor }}&
+
+          {% endif %}
+
+                    {% if query.vulneravel != 1 %}
+                    {{ query.parametro }}={{ query.valor }}&
+
+          {% endif %}
+
+
+
+          {% endif %}
+          {% endfor %}
+
+          <a href="/whatweb/{{ diretorio.id }}">whatweb</a>
+
+
+          <a href="/sqlmap/{{ diretorio.id }}">sqlmap</a>
+          <a href="/parserSite/{{ diretorio.id }}">parserSite</a>
+
         {% endif %}
                     {% endfor %}
       </div>

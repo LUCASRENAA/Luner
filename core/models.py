@@ -63,6 +63,7 @@ class QueryParameteres(models.Model):
 
     parametro = models.CharField(max_length=100)
     valor = models.CharField(max_length=100)
+    vulneravel = models.IntegerField(default=0)
 
 
 class Porta(models.Model):
@@ -222,6 +223,7 @@ class SqlComandos(models.Model):
     comando = models.CharField(max_length=300)
     porta = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(65536)])
+    diretorio = models.ForeignKey(Diretorios, models.CASCADE)
 
     def __str__(self):
         return self.comando

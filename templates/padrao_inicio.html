@@ -37,20 +37,21 @@
 
 {% for redeObjeto in redes %}
 
-{% if redeObjeto == rede %}
+{% if redeObjeto.rede.rede == rede.rede %}
   <option value="{{ redeObjeto.rede.rede }}" selected>{{ redeObjeto.rede.rede }}
 </option>
 
 {% endif %}
 
 
-{% if redeObjeto != rede %}
+{% if redeObjeto.rede.rede != rede.rede %}
   <option value="{{ redeObjeto.rede.rede }}" >{{ redeObjeto.rede.rede }}
 {% endif %}
 
       {% endfor %}
       </select>
-      Pentest: {{ rede.pentest.nome }}
+      Pentest:  {{ redepentest.pentest.nome }}
+
 
     </a></div>
 
@@ -96,7 +97,7 @@
 
       {% endfor %}
       </select>
-      Pentest: {{ rede.pentest.nome }}
+      Pentest:  {{ redepentest.pentest.nome }}
 
     </a></div>
 
