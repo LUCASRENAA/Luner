@@ -32,6 +32,8 @@ do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas d
 
 <h1>Como instalar?</h1>
 
+Ainda em desenvolvimento
+
 
 ## Como usar?
 
