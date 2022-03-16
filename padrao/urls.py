@@ -34,8 +34,8 @@ urlpatterns = [
                   path('rodarExploits/', views.verExploitsRodar),
                   path('rodar/<id>', views.rodar),
 
-                  path('dominio/<dominio>/<rede_vpn>', views.publicoDominio),
-                  path('dominio/ver/<dominio>/<rede>', views.verDominio),
+                  path('dominio2/<dominio>/<rede_vpn>', views.publicoDominio),
+                  path('dominio2/ver/<dominio>/<rede>', views.verDominio),
 
                   path('spf/<dominio>/<rede_vpn>', views.SPF),
                   path('emails/<dominio>/<rede_vpn>', views.EmailsFuncao),
@@ -57,5 +57,9 @@ urlpatterns = [
 
                   path('inicio/', RedirectView.as_view(url='/inicio/WQFQWFUQWHFQWHFQWHFIWIF')),
 
+                  path('dominio', views.cursos),
+                  path('dominio/<id>', views.assunto),
+                  path('dominio/<id>/<ip>', views.assunto_ip),
+
                   path('',RedirectView.as_view(url='rede/'))
-]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

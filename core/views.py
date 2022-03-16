@@ -29,7 +29,8 @@ from pymetasploit3.msfrpc import MsfRpcClient
 
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
     Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails, \
-    SenhaMsfConsole, SubDominio, ExploitRodar, Exploit_Payload, QueryParameteres, SqlComandos
+    SenhaMsfConsole, SubDominio, ExploitRodar, Exploit_Payload, QueryParameteres, SqlComandos, Etapas, Vulnerabilidades, \
+    Vulnerabilidades_Definicoes
 
 
 def login_user(request):
@@ -130,6 +131,11 @@ def inicio(request,rede):
 
 @login_required(login_url='/login/')
 def rede(request):
+    try:
+        Vulnerabilidades_Definicoes.objects.get(nome="SQL Injection",descricao="A vulnerabilidade SQL Injection permite que o atacante utilize comandos sql no servidor alvo")
+    except:
+        Vulnerabilidades_Definicoes.objects.create(nome="SQL Injection",descricao="A vulnerabilidade SQL Injection permite que o atacante utilize comandos sql no servidor alvo")
+
     return render(request,'rede.html')
 
 def dataAtual():
@@ -1260,7 +1266,7 @@ def exploit3(request,sessao):
 
 @login_required(login_url='/login/')
 def exploit(request):
-    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
     ip_entrou = []
     porta_saida = 9998
 
@@ -1278,7 +1284,7 @@ def exploit(request):
                 if int(porta.porta) == 139:
                     validando_porta=1
             if validando_porta == 1:
-                    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+                    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
 
                     exploit = client.modules.use('exploit', 'windows/smb/ms17_010_psexec')
                     exploit['RHOSTS'] = str(ip.ip)
@@ -1355,7 +1361,7 @@ def rodandoExploit(request):
 
 @login_required(login_url='/login/')
 def rodandoExploitCerto(request):
-    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
     objeto = ExploitRodar.objects.get(id=request.POST.get('objeto'))
 
     exploit = client.modules.use('exploit', objeto.exploit)
@@ -1391,7 +1397,7 @@ def rodandoExploitCerto(request):
 
 @login_required(login_url='/login/')
 def rodandoExploit(request):
-    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
     exploit  = client.modules.use('exploit', request.POST.get('exploit'))
     payload = client.modules.use('payload', request.POST.get('payload'))
 
@@ -1433,7 +1439,7 @@ def exploit3(request,sessao):
 
 
 
-    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
     comando = request.POST.get('comando')
 
     shell = client.sessions.session(sessao)
@@ -1636,3 +1642,151 @@ def parserSite(request,id):
             alterarDiretoriosHttpCode(ip_objeto, porta, path_filtrar, 200, diretorio, path)
 
         return redirect('/inicio/')
+
+
+
+def cursos(request):
+    nome = "cursos"
+    try:
+        #baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("Todos")
+        baixa = 0
+        intermediaria = 0
+        alta = 0
+        critica = 0
+
+    except:
+        baixa = 0
+        intermediaria = 0
+        alta = 0
+        critica = 0
+
+    nome = {"usuario": request.user, "assuntos": Pentest_Rede.objects.all(),
+            "nome": nome,
+            "assuntos_ramo": Etapas.objects.all(),
+            #"assuntos_ramo_ramo": Postagens.objects.all(),
+            "pagina": 1,
+            "baixa": baixa,
+            "intermediaria" : intermediaria,
+            "alta": alta,
+            "critica":critica}
+    nome["scans"] = verificarScan()
+
+
+    return render(request, 'documentacao.html', nome)
+
+
+def assunto(request,id):
+    pentest_objeto = Pentest_Rede.objects.get(id=id)
+
+    if pentest_objeto.usuario == request.user:
+        rede_objeto = pentest_objeto.rede
+
+        ips = IP.objects.filter(ativo=1, rede=rede_objeto)
+
+        for ip in ips:
+            print(ip)
+            try :
+                Etapas.objects.get(ip=ip)
+            except:
+
+                Etapas.objects.create(dominio = ip.ip,
+                                          assunto = pentest_objeto,
+                                          ip = ip)
+
+        nome = "cursos"
+        try:
+            #baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade(materia)
+            baixa = 0
+            intermediaria = 0
+            alta = 0
+            critica = 0
+            for ip in ips:
+                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1, ip=ip)) + baixa
+                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2, ip=ip)) + intermediaria
+                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3, ip=ip)) + alta
+                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4, ip=ip)) + critica
+        except:
+            baixa = 0
+            intermediaria = 0
+            alta = 0
+            critica = 0
+            for ip in ips:
+                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1,ip=ip)) + baixa
+                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2,ip=ip)) + intermediaria
+                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3,ip=ip)) + alta
+                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4,ip=ip)) + critica
+        nome = {"usuario": request.user,
+                "assuntos": Etapas.objects.filter(assunto=pentest_objeto),
+                #'pentest': Pentests.objects.filter(assunto=DominioVisualizar.objects.get(dominio=Dominio.objects.get(nome=materia))),
+                "nome": nome,
+                "materia": pentest_objeto.id,
+                #"assuntos_ramo_ramo": Postagens.objects.all(),
+                "pagina": 2,
+                "baixa": baixa,
+                "intermediaria": intermediaria,
+                "alta": alta,
+                "critica": critica
+                }
+        nome["scans"] = verificarScan()
+
+        return render(request, 'documentacao.html', nome)
+
+
+
+def assunto_ip(request,id,ip):
+    pentest_objeto = Pentest_Rede.objects.get(id=id)
+
+    if pentest_objeto.usuario == request.user:
+        rede_objeto = pentest_objeto.rede
+        ip_vai = IP.objects.get(ip=ip,rede=rede_objeto)
+        portas_vai = Porta.objects.filter(ip=ip_vai,ativo=1)
+
+        ips = IP.objects.filter(ativo=1, rede=rede_objeto)
+
+        for ip in ips:
+            print(ip)
+            try :
+                Etapas.objects.get(ip=ip)
+            except:
+
+                Etapas.objects.create(dominio = ip.ip,
+                                          assunto = pentest_objeto,
+                                          ip = ip)
+
+        try:
+            #baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade(materia)
+            baixa = 0
+            intermediaria = 0
+            alta = 0
+            critica = 0
+            for ip in ips:
+                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1, ip=ip)) + baixa
+                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2, ip=ip)) + intermediaria
+                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3, ip=ip)) + alta
+                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4, ip=ip)) + critica
+        except:
+            baixa = 0
+            intermediaria = 0
+            alta = 0
+            critica = 0
+            for ip in ips:
+                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1,ip=ip)) + baixa
+                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2,ip=ip)) + intermediaria
+                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3,ip=ip)) + alta
+                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4,ip=ip)) + critica
+
+        vulnerabilidades = Vulnerabilidades.objects.filter(ip=ip_vai)
+
+        nome = {"usuario": request.user,
+                "materia": pentest_objeto.id,
+                "baixa": baixa,
+                "intermediaria": intermediaria,
+                "alta": alta,
+                "critica": critica,
+                "ip":ip_vai,
+                "portas":portas_vai,
+                "vulnerabilidades":vulnerabilidades
+                }
+        nome["scans"] = verificarScan()
+
+        return render(request, 'postagens.html', nome)

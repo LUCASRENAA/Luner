@@ -121,6 +121,7 @@ class Pentest(models.Model):
 
     automatico = models.IntegerField(default=0)
 
+    imagem = models.ImageField(upload_to='static/pentests', blank=True)
 
 class Pentest_Rede(models.Model):
     rede = models.ForeignKey(Rede, models.CASCADE)
@@ -227,3 +228,29 @@ class SqlComandos(models.Model):
 
     def __str__(self):
         return self.comando
+
+
+class Vulnerabilidades_Definicoes(models.Model):
+    nome = models.CharField(max_length=50)
+    descricao = models.CharField(max_length=500)
+
+
+class Vulnerabilidades(models.Model):
+    ip = models.ForeignKey(IP, models.CASCADE)
+    porta = models.ForeignKey(Porta, models.CASCADE)
+    tipo = models.ForeignKey(Vulnerabilidades_Definicoes, models.CASCADE)
+    path = models.CharField(max_length=50)
+    parametro = models.CharField(max_length=50)
+    CVSS = models.DecimalField(max_digits=10, decimal_places=5)
+    impacto = models.CharField(max_length=500)
+    recomendacao = models.CharField(max_length=500)
+
+
+
+class Etapas(models.Model):
+    dominio = models.CharField(max_length=100)
+    assunto = models.ForeignKey(Pentest_Rede, models.CASCADE)
+    ip = models.ForeignKey(IP, models.CASCADE)
+
+    def __str__(self):
+        return self.ip.ip
