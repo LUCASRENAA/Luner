@@ -196,13 +196,15 @@
             {% for porta in portas %}
              <p>Porta abertas: {{ porta.porta }} </p>
             {% endfor %}
-                    <div class="alert alert-dark" role="alert">
 
-            <h2  style="color: #000000;">Vulnerabilidades</h2>
-    </div>
 
 
             {% for vulnerabilidade in vulnerabilidades %}
+                                <div class="alert alert-dark" role="alert">
+
+                        <h2  style="color: #000000;">Vulnerabilidade</h2>
+    </div>
+
              <p>Tipo: {{ vulnerabilidade.tipo.nome }} </p>
                          <p>Descrição: {{ vulnerabilidade.tipo.descricao }} </p>
                          <p>Porta: {{ vulnerabilidade.porta.porta }} </p>

@@ -106,6 +106,8 @@ def inicio(request,rede):
         except:
             return HttpResponse("crie um pentest para essa rede")
 
+
+
         ips_ativos = IP.objects.filter(ativo = 1,rede =rede_objeto )
         ips_desligados = IP.objects.filter(ativo = 0,rede = rede_objeto)
         diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
@@ -146,7 +148,13 @@ def dataAtual():
     print(data_e_hora_sao_paulo)
     return str(data_e_hora_sao_paulo)
 
+@login_required(login_url='/login/')
+def verificarPermissoesRedePentest(rede_vpn,request):
+    try:
+        Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
+    except:
 
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
 
 @login_required(login_url='/login/')
 def scanOpcoes(request):
@@ -154,12 +162,8 @@ def scanOpcoes(request):
 
     rede = request.POST.get('rede')
     rede_vpn = request.POST.get('rede_vpn')
+    verificarPermissoesRedePentest(rede_vpn,request)
 
-    try:
-        Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
-    except:
-
-        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
     vpn = Rede.objects.get(id=rede_vpn)
 
     versao = request.POST.get('versao')
@@ -513,7 +517,20 @@ def verificarArquivoSqlmap(dataAgora, usuario):
                 query.vulneravel = 1
                 query.save()
 
+                vuln = Vulnerabilidades_Definicoes.objects.get(nome="SQL Injection",
+                                                        descricao="A vulnerabilidade SQL Injection permite que o atacante utilize comandos sql no servidor alvo")
+                try:
+                    Vulnerabilidades.objects.get(ip=scan.diretorio.ip,porta=Porta.objects.get(ip=scan.diretorio.ip,porta= scan.diretorio.porta,ativo=1),tipo=vuln,path=scan.diretorio.path,parametro=parametro,CVSS=8,impacto="Acesso a comandos sql no banco do servidor",recomendacao="Tratar o parametro " + str(parametro))
+                except:
+                    Vulnerabilidades.objects.create(ip=scan.diretorio.ip, porta=Porta.objects.get(ip=scan.diretorio.ip,
+                                                                                               porta=scan.diretorio.porta,
+                                                                                               ativo=1), tipo=vuln,
+                                                 path=scan.diretorio.path, parametro=parametro, CVSS=8,
+                                                 impacto="Acesso a comandos sql no banco do servidor",
+                                                 recomendacao="Tratar o parametro " + str(parametro))
+
     scan.feito = 1
+    scan.save()
 
 def verificarArquivoFfuf(dataAgora, usuario):
     from urllib.parse import urlparse
@@ -794,8 +811,10 @@ def verificarSeExisteSeNaoCriar(ip,usuario,rede):
 
 @login_required(login_url='/login/')
 def whatweb(request,id):
-
-        Pentest_Rede.objects.get( rede=Diretorios.objects.get(id=id).ip.rede,usuario=User.objects.get(id=request.user.id))
+        try:
+            Pentest_Rede.objects.get( rede=Diretorios.objects.get(id=id).ip.rede,usuario=User.objects.get(id=request.user.id))
+        except:
+            return HttpResponse("Você não tem permissão")
         data_Agora = dataAtual()
         ip = Diretorios.objects.get(id=id).ip
         porta = Diretorios.objects.get(id=id).porta
@@ -883,6 +902,11 @@ def publicoDominio(request,dominio,rede_vpn):
     else:
         dominio = request.POST.get('dominio')
     vpn = Rede.objects.get(id=rede_vpn)
+
+    try:
+        Pentest_Rede.objects.get(rede=vpn,usuario=User.objects.get(id=request.user.id))
+    except:
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
 
     res = subprocess.check_output('host -t A '+   str(dominio) + ' | cut -d " " -f4', shell=True)
     res = res.decode("UTF-8").replace(' ', '')
@@ -1022,6 +1046,10 @@ def verDominio(request,dominio,rede):
         except:
             return HttpResponse("crie um pentest para essa rede")
 
+
+
+    verificarPermissoesRedePentest(vpn.id,request)
+
     try:
         spf = spfDominio.objects.get(Dominio=Dominio.objects.get(nome=dominio,ip__rede=vpn))
         vulneravelSpf = spf.vulneravel
@@ -1085,6 +1113,9 @@ def SPF(request,dominio,rede_vpn):
     dataAgora = dataAtual()
     vpn = Rede.objects.get(id=rede_vpn)
 
+    verificarPermissoesRedePentest(rede_vpn,request)
+
+
     try:
         Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
     except:
@@ -1147,7 +1178,10 @@ def SPF(request,dominio,rede_vpn):
 
 def EmailsFuncao(request,dominio,rede_vpn):
     contador = 0
+    verificarPermissoesRedePentest(rede_vpn,request)
+
     os.system("rm -f arquivos/publico/email/" + str(dominio))
+
     try:
         Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
     except:
@@ -1469,7 +1503,10 @@ def LigarMetaexploit():
 
 def theHarvester(request,dominio,rede_vpn):
     contador = 0
+    verificarPermissoesRedePentest(rede_vpn,request)
+
     os.system(f'rm -f theHarvester/resultado{dominio}.xml')
+
     try:
         Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
     except:
@@ -1550,7 +1587,11 @@ def rodar(request,id):
 
 def sqlmap(request,id):
     data_Agora = dataAtual()
-
+    try:
+        Pentest_Rede.objects.get(rede=Diretorios.objects.get(id=id).ip.rede,
+                                 usuario=User.objects.get(id=request.user.id))
+    except:
+        return HttpResponse("Você não tem permissão")
     diretorio_objeto = Diretorios.objects.get(id=id)
     ip = Diretorios.objects.get(id=id).ip.ip
     ip_objeto = Diretorios.objects.get(id=id).ip
@@ -1581,8 +1622,10 @@ def sqlmap(request,id):
                                diretorio=diretorio_objeto)
 @login_required(login_url='/login/')
 def parserSite(request,id):
-
-        Pentest_Rede.objects.get( rede=Diretorios.objects.get(id=id).ip.rede,usuario=User.objects.get(id=request.user.id))
+        try:
+            Pentest_Rede.objects.get( rede=Diretorios.objects.get(id=id).ip.rede,usuario=User.objects.get(id=request.user.id))
+        except:
+            return HttpResponse("Você não tem permissão")
         data_Agora = dataAtual()
         diretorio_objeto =  Diretorios.objects.get(id=id)
         ip = Diretorios.objects.get(id=id).ip.ip
@@ -1644,15 +1687,40 @@ def parserSite(request,id):
         return redirect('/inicio/')
 
 
+def verificarQuantidadeVulnerabilidade(param,request,id_rede,ip):
+    baixa = 0
+    intermediaria = 0
+    alta = 0
+    critica = 0
+    if param == "Todos":
+        vulns =  Vulnerabilidades.objects.filter(ip__usuario= request.user)
+    if id_rede != "":
+        rede_objeto = Rede.objects.get(id=id_rede)
+        vulns = Vulnerabilidades.objects.filter(ip__usuario=request.user,ip__rede=rede_objeto)
+    if ip != "":
+        vulns = Vulnerabilidades.objects.filter(ip=ip)
+    for vuln in vulns:
+            print(vuln)
+            if float(vuln.CVSS) >= 7.5:
+                critica = critica + 1
+            if float(vuln.CVSS) < 7.5 and float(vuln.CVSS) >= 5:
+                alta = alta + 1
+            if float(vuln.CVSS) < 5 and float(vuln.CVSS) >= 2.5:
+                intermediaria = intermediaria + 1
+
+            if float(vuln.CVSS) < 2.5:
+                baixa = baixa + 1
+
+
+
+
+    return baixa,intermediaria,alta,critica
 
 def cursos(request):
     nome = "cursos"
     try:
-        #baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("Todos")
-        baixa = 0
-        intermediaria = 0
-        alta = 0
-        critica = 0
+        baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("Todos",request,"","")
+
 
     except:
         baixa = 0
@@ -1660,7 +1728,7 @@ def cursos(request):
         alta = 0
         critica = 0
 
-    nome = {"usuario": request.user, "assuntos": Pentest_Rede.objects.all(),
+    nome = {"usuario": request.user, "assuntos": Pentest_Rede.objects.filter(usuario=request.user),
             "nome": nome,
             "assuntos_ramo": Etapas.objects.all(),
             #"assuntos_ramo_ramo": Postagens.objects.all(),
@@ -1695,16 +1763,8 @@ def assunto(request,id):
 
         nome = "cursos"
         try:
-            #baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade(materia)
-            baixa = 0
-            intermediaria = 0
-            alta = 0
-            critica = 0
-            for ip in ips:
-                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1, ip=ip)) + baixa
-                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2, ip=ip)) + intermediaria
-                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3, ip=ip)) + alta
-                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4, ip=ip)) + critica
+            baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("", request,rede_objeto.id, "")
+
         except:
             baixa = 0
             intermediaria = 0
@@ -1754,16 +1814,8 @@ def assunto_ip(request,id,ip):
                                           ip = ip)
 
         try:
-            #baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade(materia)
-            baixa = 0
-            intermediaria = 0
-            alta = 0
-            critica = 0
-            for ip in ips:
-                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1, ip=ip)) + baixa
-                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2, ip=ip)) + intermediaria
-                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3, ip=ip)) + alta
-                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4, ip=ip)) + critica
+            baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("", request, "",
+                                                                                         ip_vai)
         except:
             baixa = 0
             intermediaria = 0
