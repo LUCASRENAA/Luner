@@ -18,7 +18,6 @@
 
 
 
-
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 
 </head>
@@ -119,48 +118,17 @@
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
 </style>
   <body>
-    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Luner</a>
-      <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
-      <ul class="navbar-nav px-3">
-        <li class="nav-item text-nowrap">
-          <a class="nav-link" href="#">Sign out</a>
-        </li>
-      </ul>
-    </nav>
+
 
     <div class="container-fluid">
       <div class="row">
-        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-          <div class="sidebar-sticky">
-            <ul class="nav flex-column">
 
 
-            </ul>
+<div class="container">
+                                 <div class="container-fluid quem-somos text-center margin">
 
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Saved reports</span>
-              <a class="d-flex align-items-center text-muted" href="#">
-                <span data-feather="plus-circle"></span>
-              </a>
-            </h6>
-            <ul class="nav flex-column mb-2">
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                  <span data-feather="file-text"></span>
-                  Scans sendo feitos
-                </a>
-        {% for scan in scans %}
-               <h6>Range ip - {{ scan.ip }}<p></p> Data do inicio - {{ scan.dataAgora }}</h6>
-        <p></p>
-        {% endfor %}
-              </li>
-            </ul>
-          </div>
-        </nav>
-
-        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
-       <h1>Quantidade de vulnerabilidades encontradas nos sistemas</h1>
+       <h2>Quantidade de vulnerabilidades encontradas nos sistemas</h2>
+                                 </div>
 <p></p>
 
 
@@ -188,32 +156,114 @@
 </p>
   </div>
 </div>                            <div class="container-fluid quem-somos text-center margin">
+              <div class="row">
+              <div class="col">
 
+<img src="/static/graficos/{{ hash_veio }}.png" width="100%">
+                  </div>              <div class="col">
 
+    <img src="/static/graficos/{{ hash_veio2 }}.png" width="100%">
+                  </div>
+</div>
         <div class="alert alert-dark" role="alert">
     <h2  style="color: #000000;">IP: {{  ip.ip }}</h2>
     </div>
+              <div class="row">
+
             {% for porta in portas %}
-             <p>Porta abertas: {{ porta.porta }} </p>
-            {% endfor %}
 
-
-
-            {% for vulnerabilidade in vulnerabilidades %}
-                                <div class="alert alert-dark" role="alert">
-
-                        <h2  style="color: #000000;">Vulnerabilidade</h2>
+              <div class="col">
+            Porta aberta: {{ porta.porta }}
     </div>
 
-             <p>Tipo: {{ vulnerabilidade.tipo.nome }} </p>
-                         <p>Descrição: {{ vulnerabilidade.tipo.descricao }} </p>
-                         <p>Porta: {{ vulnerabilidade.porta.porta }} </p>
-                         <p>Path: {{ vulnerabilidade.path }} </p>
-                         <p>Parametro: {{ vulnerabilidade.parametro }} </p>
-                         <p>Impacto: {{ vulnerabilidade.impacto }} </p>
-                                     <p>CVSS: {{ vulnerabilidade.CVSS }} </p>
-                                     <p>Recomendação: {{ vulnerabilidade.recomendacao }} </p>
-                                     <p>Evidencias: imagem aqui </p>
+                   {% if forloop.counter|divisibleby:3 %}
+                                    </div>
+
+              <div class="row">
+
+                  {% endif%}
+            {% endfor %}
+                  </div>
+
+
+
+              <div class="alert alert-dark" role="alert">
+
+                        <h2  style="color: #000000;">Vulnerabilidades</h2>
+    </div>
+
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Tipo</th>
+      <th scope="col">Descrição</th>
+      <th scope="col">Porta</th>
+      <th scope="col">Path</th>
+              <th scope="col">Parametro</th>
+              <th scope="col">Impacto</th>
+              <th scope="col">CVSS</th>
+              <th scope="col">Recomendação</th>
+              <th scope="col">Corrigida</th>
+
+    </tr>
+  </thead>
+  <tbody>
+            {% for vulnerabilidade in vulnerabilidades %}
+
+
+
+
+
+    <tr>
+      <th scope="row">{{ vulnerabilidade.tipo.nome }}</th>
+
+        <th scope="row">{{ vulnerabilidade.tipo.descricao }} </th>
+                       <th scope="row">{{ vulnerabilidade.porta.porta }}</th>
+                          <th scope="row">{{ vulnerabilidade.path }} </th>
+                          <th scope="row">{{ vulnerabilidade.parametro }}</th>
+                        <th scope="row">{{ vulnerabilidade.impacto }} </th>
+                                      <th scope="row">{{ vulnerabilidade.CVSS }} </th>
+                                    <th scope="row">{{ vulnerabilidade.recomendacao }} </th>
+            {% if vulnerabilidade.tratada == 0 %}
+            <th scope="row">Vulnerabilidade ainda não foi tratada</th>
+            {% endif %}
+                               {% if vulnerabilidade.tratada == 1 %}
+           <th scope="row">Vulnerabilidade em correção</th>
+            {% endif %}
+
+                    {% if vulnerabilidade.tratada == 2 %}
+              <th scope="row">Vulnerabilidade resolvida</th>
+            {% endif %}
+
+    </tr>
+
+
+
+
+            {% endfor %}
+              </tbody>
+</table>
+                <div class="alert alert-dark" role="alert">
+
+                        <h2  style="color: #000000;">CVE IPS</h2>
+    </div>
+
+            {% for cve in cve_ip %}
+            <p>Tente explorar esse host através do CVE: {{ cve.cve.cve }}</p>
+            {% if  cve.vulneravel == 0 %}
+            Ainda não foi testado
+
+            {% endif %}
+
+                  {% if  cve.vulneravel == 1 %}
+            Vulneravel
+
+            {% endif %}
+                  {% if  cve.vulneravel == 2 %}
+            Não vulneravel
+
+            {% endif %}
 
 
             {% endfor %}
@@ -266,7 +316,6 @@
       });
     </script>
 
-  <scritp>
 
   <script>
     function Mostrar(id) {
@@ -285,5 +334,9 @@
     }
 
   </script>
+</div>
+      </div>
+    </div>
+
   </body>
 </html>

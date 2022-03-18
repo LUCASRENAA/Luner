@@ -1,14 +1,16 @@
 import datetime
+import hashlib
 import ipaddress
 import json
 import subprocess
 
+import matplotlib
 import requests
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404, HttpResponseNotFound
 
 from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -1487,6 +1489,8 @@ def exploit3(request,sessao):
              "sessao": sessao}
     return render(request,'shell.html',dados)
 
+def deletarImagens():
+    os.system('rm static/graficos/*.png')
 def LigarMetaexploit():
     try:
         client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
@@ -1699,6 +1703,7 @@ def verificarQuantidadeVulnerabilidade(param,request,id_rede,ip):
         vulns = Vulnerabilidades.objects.filter(ip__usuario=request.user,ip__rede=rede_objeto)
     if ip != "":
         vulns = Vulnerabilidades.objects.filter(ip=ip)
+    portas_vul = []
     for vuln in vulns:
             print(vuln)
             if float(vuln.CVSS) >= 7.5:
@@ -1710,16 +1715,19 @@ def verificarQuantidadeVulnerabilidade(param,request,id_rede,ip):
 
             if float(vuln.CVSS) < 2.5:
                 baixa = baixa + 1
+            if vuln.porta.porta in portas_vul:
+                pass
+            else:
+                portas_vul.append(vuln.porta.porta)
 
 
 
-
-    return baixa,intermediaria,alta,critica
+    return baixa,intermediaria,alta,critica,portas_vul
 
 def cursos(request):
     nome = "cursos"
     try:
-        baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("Todos",request,"","")
+        baixa, intermediaria, alta, critica,portas_vuln = verificarQuantidadeVulnerabilidade("Todos",request,"","")
 
 
     except:
@@ -1761,42 +1769,77 @@ def assunto(request,id):
                                           assunto = pentest_objeto,
                                           ip = ip)
 
-        nome = "cursos"
-        try:
-            baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("", request,rede_objeto.id, "")
+        #redetotal
+        #baixa, intermediaria, alta, critica,portas_vuln = verificarQuantidadeVulnerabilidade("", request,rede_objeto.id, "")
 
-        except:
-            baixa = 0
-            intermediaria = 0
-            alta = 0
-            critica = 0
-            for ip in ips:
-                baixa = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=1,ip=ip)) + baixa
-                intermediaria = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=2,ip=ip)) + intermediaria
-                alta = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=3,ip=ip)) + alta
-                critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4,ip=ip)) + critica
+        labels = []
+        baixa_2 = []
+        media_2 = []
+
+        alta_2 = []
+        critica_2 = []
+        portas_vulneraveis = 0
+        portas_total = 0
+        for ip_vai in ips:
+
+                baixa, intermediaria, alta, critica, portas_vuln = verificarQuantidadeVulnerabilidade("", request, "",
+                                                                                                  ip_vai)
+                print(baixa, intermediaria, alta, critica, portas_vuln)
+                print(baixa != 0 and intermediaria!=0 and alta !=0and critica !=0)
+                if portas_vuln != []:
+
+                    labels.append(ip_vai.ip)
+                    baixa_2.append(baixa)
+                    media_2.append(intermediaria)
+
+                    alta_2.append(alta)
+                    critica_2.append(critica)
+                    portas_vulneraveis = portas_vulneraveis + len(portas_vuln)
+
+                portas_vai = Porta.objects.filter(ip=ip_vai, ativo=1)
+                portas_total = portas_total+len(portas_vai)
+
+        hash_veio = gerarGraficos(labels, baixa_2, media_2, alta_2, critica_2, 'Quantidade de vulnerabilidades',
+                                  'Vulnerabilidades', "Baixa", "Média", "Alta", "Crítica")
+
+        labels = ['Vulnerabilidades']
+        baixa_2 = [portas_total]
+        media_2 = [portas_vulneraveis]
+
+        alta_2 = [0]
+        critica_2 = [0]
+        hash_veio2 = gerarGraficos(labels, baixa_2, media_2, alta_2, critica_2, 'Quantidade de portas',
+                                   'Portas', "Portas no total", "Portas Vulneraveis", "", "")
         nome = {"usuario": request.user,
                 "assuntos": Etapas.objects.filter(assunto=pentest_objeto),
                 #'pentest': Pentests.objects.filter(assunto=DominioVisualizar.objects.get(dominio=Dominio.objects.get(nome=materia))),
-                "nome": nome,
+                #"nome": nome,
                 "materia": pentest_objeto.id,
                 #"assuntos_ramo_ramo": Postagens.objects.all(),
                 "pagina": 2,
                 "baixa": baixa,
                 "intermediaria": intermediaria,
                 "alta": alta,
-                "critica": critica
+                "critica": critica,
+                "hash_veio":hash_veio,
+                "hash_veio2": hash_veio2
+
                 }
         nome["scans"] = verificarScan()
 
         return render(request, 'documentacao.html', nome)
-
+    return HttpResponseNotFound()
 
 
 def assunto_ip(request,id,ip):
     pentest_objeto = Pentest_Rede.objects.get(id=id)
 
     if pentest_objeto.usuario == request.user:
+        import pdfkit
+        try:
+            pdfkit.from_url(f'http://127.0.0.1:8000/dominio/{id}/{ip}', 'shaurya.pdf')
+        except:
+            pass
         rede_objeto = pentest_objeto.rede
         ip_vai = IP.objects.get(ip=ip,rede=rede_objeto)
         portas_vai = Porta.objects.filter(ip=ip_vai,ativo=1)
@@ -1814,7 +1857,7 @@ def assunto_ip(request,id,ip):
                                           ip = ip)
 
         try:
-            baixa, intermediaria, alta, critica = verificarQuantidadeVulnerabilidade("", request, "",
+            baixa, intermediaria, alta, critica,portas_vuln = verificarQuantidadeVulnerabilidade("", request, "",
                                                                                          ip_vai)
         except:
             baixa = 0
@@ -1828,17 +1871,72 @@ def assunto_ip(request,id,ip):
                 critica = len(Porta.objects.filter(ativo=1, vulneravel=1, tipo=4,ip=ip)) + critica
 
         vulnerabilidades = Vulnerabilidades.objects.filter(ip=ip_vai)
+        matplotlib.use('Agg')
 
+        labels = ['Vulnerabilidades']
+        baixa_2 = [baixa]
+        media_2 = [intermediaria]
+
+        alta_2 = [alta]
+        critica_2 = [critica]
+        hash_veio = gerarGraficos(labels, baixa_2, media_2, alta_2, critica_2, 'Quantidade de vulnerabilidades',
+                                  'Vulnerabilidades',"Baixa","Média","Alta","Crítica")
+
+        labels = ['Vulnerabilidades']
+        baixa_2 = [len(portas_vai)]
+        media_2 = [len(portas_vuln)]
+
+        alta_2 = [0]
+        critica_2 = [0]
+        hash_veio2 = gerarGraficos(labels, baixa_2, media_2, alta_2, critica_2, 'Quantidade de portas',
+                                  'Portas',"Portas no total","Portas Vulneraveis","","")
         nome = {"usuario": request.user,
-                "materia": pentest_objeto.id,
-                "baixa": baixa,
-                "intermediaria": intermediaria,
-                "alta": alta,
-                "critica": critica,
-                "ip":ip_vai,
-                "portas":portas_vai,
-                "vulnerabilidades":vulnerabilidades
+                    "materia": pentest_objeto.id,
+                    "baixa": baixa,
+                    "intermediaria": intermediaria,
+                    "alta": alta,
+                    "critica": critica,
+                    "ip":ip_vai,
+                    "portas":portas_vai,
+                    "vulnerabilidades":vulnerabilidades,
+                    "cve_ip":CVE_IP.objects.filter(ip=ip_vai),
+                "hash_veio":hash_veio,
+                "hash_veio2": hash_veio2
+
                 }
         nome["scans"] = verificarScan()
 
+
         return render(request, 'postagens.html', nome)
+
+def gerarGraficos(labels,baixa_2,media_2,alta_2,critica_2,ylabel,set_title,label_baixa,label_media,label_alta,label_critica):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    matplotlib.use('Agg')
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.15  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width / 1, baixa_2, width, label=label_baixa,color="dimgrey")
+    rects2 = ax.bar(x -width*3, media_2, width, label=label_media,color="cornflowerblue")
+    rects3 = ax.bar(x + width*3, alta_2, width, label=label_alta,color="gold")
+    rects4 = ax.bar(x + width / 1, critica_2, width, label=label_critica,color="orangered")
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel(ylabel)
+    ax.set_title(set_title)
+    ax.set_xticks(x, labels)
+    ax.legend()
+
+    ax.bar_label(rects1, padding=3)
+    ax.bar_label(rects2, padding=3)
+    ax.bar_label(rects3, padding=3)
+    ax.bar_label(rects4, padding=3)
+
+    fig.tight_layout()
+
+    hash = hashlib.sha512(str(dataAtual()).encode("utf-8")).hexdigest()
+    plt.show()
+    plt.savefig("static/graficos/" + hash)
+    return hash

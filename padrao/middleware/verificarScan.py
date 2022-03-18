@@ -3,7 +3,8 @@ from datetime import datetime, timezone, timedelta
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
 
-from core.views import xmlBancoVerificar, dirbBancoVerificar, WhatWebVerificar, LigarMetaexploit, sqlmapVerificar
+from core.views import xmlBancoVerificar, dirbBancoVerificar, WhatWebVerificar, LigarMetaexploit, sqlmapVerificar, \
+  deletarImagens
 
 
 class VerificarScan(MiddlewareMixin):
@@ -25,5 +26,5 @@ class VerificarScan(MiddlewareMixin):
 
     c = WhatWebVerificar()
     d = LigarMetaexploit()
-
+    e = deletarImagens()
     return None

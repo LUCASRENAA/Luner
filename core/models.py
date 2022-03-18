@@ -23,7 +23,8 @@ class IP(models.Model):
 
     class Meta:
         ordering = ["ip"]
-
+    def __str__(self):
+        return (f'{self.ip} -{self.rede} ')
 
 class Scan(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
@@ -98,8 +99,11 @@ class Porta(models.Model):
         }
         return lugares_envio.get(str(self.tipo), str(self.tipo))
 
-    descricao = models.CharField(max_length=50)
 
+
+    descricao = models.CharField(max_length=50)
+    def __str__(self):
+        return (f'{self.ip.ip}:{self.porta} -{self.ip.rede}:{self.ativo}')
 
 class CVE(models.Model):
     cve = models.CharField(max_length=50)
@@ -110,6 +114,7 @@ class CVE(models.Model):
 class CVE_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     cve = models.ForeignKey(CVE, models.CASCADE)
+    vulneravel = models.IntegerField(default=0)
 
 
 class Pentest(models.Model):
@@ -244,6 +249,7 @@ class Vulnerabilidades(models.Model):
     CVSS = models.DecimalField(max_digits=10, decimal_places=5)
     impacto = models.CharField(max_length=500)
     recomendacao = models.CharField(max_length=500)
+    tratada = models.IntegerField(default=0)
 
 
 

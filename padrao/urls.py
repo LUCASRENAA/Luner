@@ -60,6 +60,7 @@ urlpatterns = [
                   path('dominio', views.cursos),
                   path('dominio/<id>', views.assunto),
                   path('dominio/<id>/<ip>', views.assunto_ip),
+                  #path('pdf', views.pdfteste),
 
                   path('',RedirectView.as_view(url='rede/'))
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
