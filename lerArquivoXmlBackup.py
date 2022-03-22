@@ -1,5 +1,5 @@
-#Possivelmente ajustar esse código com ajuda de alguém
-def lerArquivoXml2(dataAgora,usuario):
+
+def lerArquivoXml(dataAgora,usuario):
     import xml.etree.ElementTree as ET
     print(usuario)
     tree = ET.parse("arquivos/nmap/" + str(dataAgora) + str(usuario) + ".xml")
@@ -48,23 +48,33 @@ def lerArquivoXml2(dataAgora,usuario):
         produtos.append(produto)
         versoes.append(versao)
         so = ""
+
+        scan = Scan.objects.get(dataAgora=dataAgora,
+                                usuario=User.objects.get(username=usuario))
+        rede_vpn = scan.ip.rede
+
         for os in child.findall("os"):
             contador = 0
             for oss in os.findall("osmatch"):
                 contador = contador + 1
-
+                #verificarSeExisteSeNaoCriar(str(oss.attrib['name']), usuario,rede_vpn)
+                print("alooooo")
+                print(str(oss.attrib['name']))
                 try:
-                    so2 = SistemaOperacional.objects.get(nome = str(oss.attrib['name']))
-                except:
-                    so2 = SistemaOperacional.objects.create(nome = str(oss.attrib['name']))
-
-                if contador == 1:
                     try:
-                        Sistema_IP.objects.get(ip=str(title.attrib['addr']),
-                                        )
+                        so2 = SistemaOperacional.objects.get(nome = IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn))
                     except:
-                        Sistema_IP.objects.create(ip=str(title.attrib['addr']),
-                                              sistema=so2)
+                        so2 = SistemaOperacional.objects.create(nome = IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn))
+
+                    if contador == 1:
+                        try:
+                            Sistema_IP.objects.get(ip=IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn),
+                                            )
+                        except:
+                            Sistema_IP.objects.create(ip=IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn),
+                                                  sistema=so2)
+                except:
+                    pass
 
         for os in child.findall("hostscript"):
             for oss in os.findall("script"):
@@ -81,37 +91,31 @@ def lerArquivoXml2(dataAgora,usuario):
                         cve = CVE.objects.create(cve = str(osss.attrib['key']))
 
                     try:
-                        CVE_IP.objects.get(ip=str(title.attrib['addr']),
+                        CVE_IP.objects.get(ip=IP.objects.get(ip = str(title.attrib['addr']),rede=rede_vpn),
                                            cve = cve)
                     except:
-                        CVE_IP.objects.create(ip=str(title.attrib['addr']),
+                        CVE_IP.objects.create(ip=IP.objects.get(ip = str(title.attrib['addr']),rede=rede_vpn),
                                            cve = cve)
 
     print(ip)
     print(portas)
     for i in range(len(ip)):
         print(ip[i])
-        try:
-            ipObjeto = IP.objects.get(ip=ip[i])
-            ipObjeto.ativo = 1
-            ipObjeto.save()
-        except:
-            if True == ipaddress.ip_address(ip[i]).is_private:
-                redelocal = 1
-            else:
-                redelocal = 0
+        print("testeeeee")
 
+        ipObjeto = IP.objects.get(ip=str(ip[i]),rede=rede_vpn,usuario=User.objects.get(username=usuario))
 
-            ipObjeto = IP.objects.create(ip=ip[i],
-                                             usuario=User.objects.get(username=usuario),
-                                             ativo=1,
-                                             redelocal = redelocal,
-                                             )
+        ipObjeto.ativo = 1
+        if True == ipaddress.ip_address(ip[i]).is_private:
+                ipObjeto.redelocal = 1
+
+        ipObjeto.save()
+
 
         contador = - 1
         for portaVariavel in portas[i]:
             try:
-                portaIp = Porta.objects.get(porta=int(portaVariavel), ip=IP.objects.get(ip=ip[i]))
+                portaIp = Porta.objects.get(porta=int(portaVariavel), ip=IP.objects.get(ip = str(ip[i]),rede=rede_vpn))
                 Porta.objects.create(porta=int(portaVariavel),
                                      ip=ipObjeto,
                                      servico=servicos[i][contador],

@@ -73,7 +73,7 @@ class Porta(models.Model):
     servico = models.CharField(max_length=50)
 
     produto = models.CharField(max_length=50)
-    versao = models.DecimalField(max_digits=10, decimal_places=5)
+    versao = models.CharField(max_length=50)
     vulneravel = models.IntegerField()
 
     class tipo(models.IntegerChoices):
@@ -114,6 +114,7 @@ class CVE(models.Model):
 class CVE_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     cve = models.ForeignKey(CVE, models.CASCADE)
+    descricao = models.CharField(max_length=500)
     vulneravel = models.IntegerField(default=0)
 
 
@@ -144,6 +145,8 @@ class SistemaOperacional(models.Model):
 class Sistema_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     sistema = models.ForeignKey(SistemaOperacional, models.CASCADE)
+    probabilidade =  models.DecimalField(max_digits=10, decimal_places=5,default=0)
+    ativo =   models.IntegerField(default=0)
 
     def __str__(self):
         return self.sistema.nome

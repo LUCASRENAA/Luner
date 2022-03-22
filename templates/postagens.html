@@ -186,12 +186,18 @@
                   </div>
 
 
-
+{% if  portas|length == 0 %}
+                  <p>Opa, parece que o ip não tem portas abertas...</p>
+                  {% endif%}
               <div class="alert alert-dark" role="alert">
 
                         <h2  style="color: #000000;">Vulnerabilidades</h2>
     </div>
+{% if  vulnerabilidades|length == 0 %}
+                  <p>Opa, parece que o ip não tem nenhuma vulnerabilidade catalogada no sistema...</p>
+                  {% endif%}
 
+    {% if  vulnerabilidades|length != 0 %}
 
 <table class="table">
   <thead class="thead-light">
@@ -244,29 +250,58 @@
             {% endfor %}
               </tbody>
 </table>
+                      {% endif%}
+
                 <div class="alert alert-dark" role="alert">
 
                         <h2  style="color: #000000;">CVE IPS</h2>
     </div>
 
+    {% if  cve_ip|length == 0 %}
+                  <p>Opa, parece que o ip não tem nenhuma vulnerabilidade identificada pelo nmap no sistema...</p>
+
+    {% endif %}
+    {% if  cve_ip|length != 0 %}
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">CVE</th>
+      <th scope="col">Descrição</th>
+      <th scope="col">Vulneravel</th>
+
+
+    </tr>
+  </thead>
+  <tbody>
             {% for cve in cve_ip %}
-            <p>Tente explorar esse host através do CVE: {{ cve.cve.cve }}</p>
+
+
+    <tr>
+      <th scope="row">{{ cve.cve.cve }}</th>
+             <th scope="row">{{ cve.descricao }}</th>
+
             {% if  cve.vulneravel == 0 %}
-            Ainda não foi testado
+
+      <th scope="row">Ainda não foi testado</th>
 
             {% endif %}
 
                   {% if  cve.vulneravel == 1 %}
-            Vulneravel
+
+      <th scope="row">Vulneravel</th>
 
             {% endif %}
                   {% if  cve.vulneravel == 2 %}
-            Não vulneravel
 
+      <th scope="row">Não vulneravel</th>
             {% endif %}
 
-
+    </tr>
             {% endfor %}
+ </tbody>
+</table>
+                          {% endif%}
 
 </div>
 

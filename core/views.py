@@ -125,11 +125,12 @@ def inicio(request,rede):
 
         portas_quantidades = []
         for ips_quantidade in ips_ativos:
-            portas_quantidades.append(PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade))))
+            portas_quantidades.append(
+                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1))))
 
         rede_pentest = Pentest_Rede.objects.get(rede=rede_objeto)
         queryparameteres = QueryParameteres.objects.all()
-        dados = {'redepentest':rede_pentest,'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.all(),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
+        dados = {'redepentest':rede_pentest,'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
         return render(request,'inicio.html',dados)
 
 
@@ -153,7 +154,7 @@ def dataAtual():
 @login_required(login_url='/login/')
 def verificarPermissoesRedePentest(rede_vpn,request):
     try:
-        Pentest_Rede.objects.get(rede=Rede.objects.get(id=rede_vpn),usuario=User.objects.get(id=request.user.id))
+        Pentest_Rede.objects.get(rede=Rede.objects.get(id=int(rede_vpn)),usuario=User.objects.get(id=request.user.id))
     except:
 
         return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
@@ -164,8 +165,11 @@ def scanOpcoes(request):
 
     rede = request.POST.get('rede')
     rede_vpn = request.POST.get('rede_vpn')
-    verificarPermissoesRedePentest(rede_vpn,request)
+    try:
+        Pentest_Rede.objects.get(rede=Rede.objects.get(id=int(rede_vpn)),usuario=User.objects.get(id=request.user.id))
+    except:
 
+        return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
     vpn = Rede.objects.get(id=rede_vpn)
 
     versao = request.POST.get('versao')
@@ -276,6 +280,12 @@ def verificarArquivoXml(dataAgora,usuario):
     except:
         pass
 
+    lerArquivoXml(dataAgora, usuario)
+    scan = Scan.objects.get(dataAgora=dataAgora,
+                            usuario=User.objects.get(username=usuario))
+    scan.feito = 1
+    scan.save()
+
 
 
 
@@ -288,142 +298,161 @@ def lerArquivoXml(dataAgora,usuario):
     tree = ET.parse("arquivos/nmap/" + str(dataAgora) + str(usuario) + ".xml")
     root = tree.getroot()
 
-    ip = []
-    portas = []
-    servicos = []
-    produtos = []
-    versoes = []
-    sistemaoperacional_vai = []
-    nomes_pegar_valores_nmap = ["name", "product", "version"]
+    scan = Scan.objects.get(dataAgora=dataAgora,
+                            usuario=User.objects.get(username=usuario))
+    rede_vpn = scan.ip.rede
+
+    ips = []
+
+    class CVE_IPS_2:
+        def __init__(self, ip, cve,descricao):
+            self.ip = ip
+            self.cve = cve
+            self.descricao = descricao
+
+    class Porta_representar:
+        def __init__(self, porta, servico, produto, versao):
+            self.porta = porta
+            self.servico = servico
+            self.produto = produto
+            self.versao = versao
+
+    class IP_representar:
+        def __init__(self, ip, portas):
+            self.ip = ip
+            self.portas = portas
+
+    cve_ips_vetor = []
     for child in root.findall("host"):
         for title in child.findall("address"):
-                print(title.attrib)
-                print(title.attrib['addr'])
-                if title.attrib['addrtype'] == 'ipv4':
-                    ip.append(title.attrib['addr'])
-
+            if title.attrib['addrtype'] == 'ipv4':
+                ip = title.attrib['addr']
         for port in child.findall("ports"):
-            porta = []
-            servico = []
-            produto = []
-            versao = []
+            portas = []
             for ports in port.findall("port"):
-                print(ports.attrib['portid'])
-                porta.append(ports.attrib['portid'])
-                print(ports.text)
+                porta = ports.attrib['portid']
                 for serviços in ports.findall("service"):
-                    servico.append(serviços.attrib['name'])
+                    servico = serviços.attrib['name']
                     try:
-                        produto.append(serviços.attrib['product'])
+                        produto = serviços.attrib['product']
                     except:
-                        produto.append("Não existe")
+                        produto = "Não existe"
                     try:
-
-                        versao.append(float(serviços.attrib['version']))
+                        versao = serviços.attrib['version']
                     except:
-                        versao.append(0)
+                        versao = 0
+                for teste in ports.findall("script"):
+                    for osss in teste.findall("table"):
+                        validar = 0
+                        try:
 
-                # product
-                # version
+                            if str(osss.attrib['key'])[:3] == "CVE":
+                                cve_texto = str(title.attrib['addr'])
+                                descricao = ""
+                                validar = 1
 
-        portas.append(porta)
-        servicos.append(servico)
-        produtos.append(produto)
-        versoes.append(versao)
-        so = ""
+                            for element in osss:
 
-        scan = Scan.objects.get(dataAgora=dataAgora,
-                                usuario=User.objects.get(username=usuario))
-        rede_vpn = scan.ip.rede
+                                if element.attrib['key'] == 'description':
+                                    print(element.attrib['key'])
+
+                                    for alou in element.findall("elem"):
+                                        print(alou.text)
+                                        descricao = alou.text
+                            if validar == 1:
+                                cve_ips_vetor.append(CVE_IPS_2(cve_texto, osss.attrib['key'],descricao))
+
+                        except:
+                            print("não é vulneravel")
+
+                porta_objeto = Porta_representar(porta, servico, produto, versao)
+                portas.append(porta_objeto)
+            ips.append(IP_representar(ip, portas))
 
         for os in child.findall("os"):
             contador = 0
             for oss in os.findall("osmatch"):
                 contador = contador + 1
-                #verificarSeExisteSeNaoCriar(str(oss.attrib['name']), usuario,rede_vpn)
-                print("alooooo")
-                print(str(oss.attrib['name']))
-                try:
-                    try:
-                        so2 = SistemaOperacional.objects.get(nome = IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn))
-                    except:
-                        so2 = SistemaOperacional.objects.create(nome = IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn))
+                sistema_operacional = str(oss.attrib['name'])
 
-                    if contador == 1:
-                        try:
-                            Sistema_IP.objects.get(ip=IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn),
-                                            )
-                        except:
-                            Sistema_IP.objects.create(ip=IP.objects.get(ip = str(oss.attrib['name']),rede=rede_vpn),
-                                                  sistema=so2)
-                except:
-                    pass
+                if contador == 1:
+                    print(str(title.attrib['addr']))
+                    sistema_operacional_principal = str(oss.attrib['name'])
+                    sistema_operacional_principal_probabilidade = str(oss.attrib['accuracy'])
 
+                    print(sistema_operacional_principal)
+                    print(sistema_operacional_principal_probabilidade)
+
+        """
         for os in child.findall("hostscript"):
             for oss in os.findall("script"):
+                    print("id script")
+                    print(oss.attrib['id'])
+                    print('\n')
+                    for osss in oss.findall("table"):
+                        print(str(title.attrib['addr']))
+                        print(porta)
 
-                print("aqui2")
-                print(oss.attrib['id'])
-                for osss in oss.findall("table"):
-                    print("aqui3")
-                    print(str(title.attrib['addr']))
-                    print(osss.attrib['key'])
-                    try:
-                        cve = CVE.objects.get(cve = str(osss.attrib['key']))
-                    except:
-                        cve = CVE.objects.create(cve = str(osss.attrib['key']))
+                        print(osss.attrib['key'])
+                        print("\n\n")
+                        for elemm in osss.findall("elem"):
+                            print("orx")
+                            print(elemm.attrib['key'])
+                            print(elemm.text)
+                            print("\n\n")
+        """
+    print("---------ips---------")
+    for ip in ips:
+        print(ip.ip)
+        try:
+            ipObjeto = IP.objects.get(ip=str(ip.ip),rede=rede_vpn,usuario=User.objects.get(username=usuario))
+            ipObjeto.ativo = 1
+        except:
+            ipObjeto = IP.objects.create(ip=str(ip.ip),rede=rede_vpn,usuario=User.objects.get(username=usuario),ativo=1)
 
-                    try:
-                        CVE_IP.objects.get(ip=IP.objects.get(ip = str(title.attrib['addr']),rede=rede_vpn),
-                                           cve = cve)
-                    except:
-                        CVE_IP.objects.create(ip=IP.objects.get(ip = str(title.attrib['addr']),rede=rede_vpn),
-                                           cve = cve)
+        for porta in ip.portas:
+            print(porta.porta)
 
-    print(ip)
-    print(portas)
-    for i in range(len(ip)):
-        print(ip[i])
-        print("testeeeee")
-
-        ipObjeto = IP.objects.get(ip=str(ip[i]),rede=rede_vpn,usuario=User.objects.get(username=usuario))
-
-        ipObjeto.ativo = 1
-        if True == ipaddress.ip_address(ip[i]).is_private:
-                ipObjeto.redelocal = 1
-
-        ipObjeto.save()
-
-
-        contador = - 1
-        for portaVariavel in portas[i]:
             try:
-                portaIp = Porta.objects.get(porta=int(portaVariavel), ip=IP.objects.get(ip = str(ip[i]),rede=rede_vpn))
-                Porta.objects.create(porta=int(portaVariavel),
+                portaIp = Porta.objects.get(porta=int(porta.porta), ip=ipObjeto)
+                Porta.objects.create(porta=int(porta.porta),
                                      ip=ipObjeto,
-                                     servico=servicos[i][contador],
-                                     produto=produtos[i][contador],
-                                     versao=versoes[i][contador],
+                                     servico=porta.servico,
+                                     produto=porta.produto,
+                                     versao=porta.versao,
                                      vulneravel=0,
                                      descricao="",
                                      tipo=0,
                                      ativo = 0)
-                # portaIp = servicos[i][contador]
             except:
 
-                contador = contador + 1
-                Porta.objects.create(porta=int(portaVariavel),
+                Porta.objects.create(porta=int(porta.porta),
                                      ip=ipObjeto,
-                                     servico=servicos[i][contador],
-                                     produto=produtos[i][contador],
-                                     versao=versoes[i][contador],
+                                     servico=porta.servico,
+                                     produto=porta.produto,
+                                     versao=porta.versao,
                                      vulneravel=0,
                                      descricao="",
                                      tipo=0)
-    portas = Porta.objects.all()
-    scanFalta = verificarScan()
-    dados = {"portas": portas, "ips": ip,
-             "scans": scanFalta}
+
+
+    for cve in cve_ips_vetor:
+        print(cve.cve)
+        print(cve.ip)
+        try:
+            cve2 = CVE.objects.get(cve=str(cve.cve))
+        except:
+            cve2 = CVE.objects.create(cve=str(cve.cve))
+
+        try:
+            cve_ajeitar = CVE_IP.objects.get(ip=IP.objects.get(ip=str(cve.ip), rede=rede_vpn),
+                               cve=cve2)
+            cve_ajeitar.descricao = cve.descricao
+            cve_ajeitar.save()
+        except:
+            CVE_IP.objects.create(ip=IP.objects.get(ip=str(cve.ip), rede=rede_vpn),
+                                  cve=cve2,descricao=cve.descricao)
+
 
 def verificarScan():
     return Scan.objects.filter(feito = 0)
@@ -1086,7 +1115,7 @@ def verDominio(request,dominio,rede):
             self.quantidade = quantidade
     portas_quantidades = []
     for ips_quantidade in ips_ativos:
-        portas_quantidades.append(PortasQuantidades(ips_quantidade,len(Porta.objects.filter(ip=ips_quantidade))))
+        portas_quantidades.append(PortasQuantidades(ips_quantidade,len(Porta.objects.filter(ip=ips_quantidade,ativo=1))))
 
 
     portas = Porta.objects.all()
@@ -1610,11 +1639,11 @@ def sqlmap(request,id):
     querys = querys[:-1]
     path = path + querys
     if porta == 443:
-        comando = f'sqlmap -u "https://{ip}:{porta}{path}"  --answers="follow=Y" --batch | tee arquivos/sqlmap/"{request.user}{data_Agora}".txt '
+        comando = f'sqlmap -u "https://{ip}:{porta}{path}"  --answers="follow=Y"  --random-agent --batch | tee arquivos/sqlmap/"{request.user}{data_Agora}".txt '
 
         saida_sqlmap = subprocess.check_output(comando,shell=True)
     else:
-        comando = f'sqlmap -u "http://{ip}:{porta}{path}"  --answers="follow=Y" --batch | tee arquivos/sqlmap/"{request.user}{data_Agora}".txt '
+        comando = f'sqlmap -u "http://{ip}:{porta}{path}"  --answers="follow=Y"  --random-agent --batch | tee arquivos/sqlmap/"{request.user}{data_Agora}".txt '
 
         saida_sqlmap = subprocess.check_output(comando,shell=True)
 
