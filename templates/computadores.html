@@ -48,7 +48,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">{{ ip.ip }}</h5>
+        <h5 class="modal-title" id="exampleModalLabel">{{ ip.ip }} {{ ip.ativo }}</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -56,33 +56,19 @@
       <div class="modal-body">
 <h1>Portas</h1>
           <p></p>
+          <div align="">
+              <hr>
+
   {% for porta in portas %}
 
                 {% if ip == porta.ip %}
-                          {% if 1 == porta.ativo %}
+                          {% if "" != porta.ativo %}
 
                 <p>Porta: {{ porta.porta }}</p>
                                 <p>Serviço: {{ porta.servico }}</p>
+              <p>Status: {{ porta.status }}</p>
 
-          <div class="container">
-  <div class="row">
-    <div class="col-sm">
-         <a href="/porta/vuln/{{ porta.id }}/1/1">Baixa</a>
 
-    </div>
-    <div class="col-sm">
-        <a  href="/porta/vuln/{{ porta.id }}/2/1">Media</a>
-
-    </div>
-    <div class="col-sm">
-    <a href="/porta/vuln/{{ porta.id }}/3/1">Alta</a>
-    </div>
-
-      <div class="col-sm">
-    <a href="/porta/vuln/{{ porta.id }}/4/1">Critica</a>
-    </div>
-  </div>
-</div>
           {% if 1 == porta.vulneravel %}
                                                     <p></p>
     <a href="/porta/nao/vuln/{{ porta.id }}/4/1">naovuln</a>
@@ -94,11 +80,14 @@
 <p></p>
           {% endif %}
                                   {% endif %}
-                        {% endif %}
+              <hr>
 
+                        {% endif %}
                 {% endfor %}
+              </div>
    <h6>Diretorios</h6>
 
+          <div></div>
           {% for diretorio in diretorios %}
         {% if diretorio.ip == ip %}
           <p></p>

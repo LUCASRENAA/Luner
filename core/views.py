@@ -110,7 +110,7 @@ def inicio(request,rede):
 
 
 
-        ips_ativos = IP.objects.filter(ativo = 1,rede =rede_objeto )
+        ips_ativos = IP.objects.filter(rede =rede_objeto )
         ips_desligados = IP.objects.filter(ativo = 0,rede = rede_objeto)
         diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
         print(diretorios)
@@ -259,10 +259,12 @@ def scanOpcoes(request):
     return redirect('/')
 
 def xmlBancoVerificar():
-    for scan in Scan.objects.filter(feito = 0):
-        print(scan.usuario)
-        verificarArquivoXml(scan.dataAgora,scan.usuario)
-
+    try:
+        for scan in Scan.objects.filter(feito = 0):
+            print(scan.usuario)
+            verificarArquivoXml(scan.dataAgora,scan.usuario)
+    except:
+        pass
 
 
 def verificarArquivoXml(dataAgora,usuario):
@@ -303,7 +305,32 @@ def lerArquivoXml(dataAgora,usuario):
     rede_vpn = scan.ip.rede
 
     ips = []
+    sistemas_operacionais_vetor = []
+    vulnerabilidades_vetor = []
+    class Vulnerabilidades_Definicoes2:
+        def __init__(self, title, description):
+            self.nome = title
+            self.descricao = description
 
+    class Vulnerabilidades2:
+        def __init__(self, ip, porta, vuln_tipo, score):
+            self.ip = ip
+            self.porta = porta
+            self.tipo = vuln_tipo
+            self.path = ""
+            self.parametro = ""
+            self.CVSS = score
+            self.impacto = ""
+            self.recomendacao = ""
+            self.tratada = 0
+
+    class Sistema_Operacional_representar:
+
+        def __init__(self, ip, nome, probabilidade, posicao):
+            self.ip = ip
+            self.nome = nome
+            self.posicao = posicao
+            self.probabilidade = probabilidade
     class CVE_IPS_2:
         def __init__(self, ip, cve,descricao):
             self.ip = ip
@@ -311,16 +338,18 @@ def lerArquivoXml(dataAgora,usuario):
             self.descricao = descricao
 
     class Porta_representar:
-        def __init__(self, porta, servico, produto, versao):
+        def __init__(self, porta, servico, produto, versao,status_porta):
             self.porta = porta
             self.servico = servico
             self.produto = produto
             self.versao = versao
+            self.status_porta=status_porta
 
     class IP_representar:
-        def __init__(self, ip, portas):
+        def __init__(self, ip, portas,status_ip):
             self.ip = ip
             self.portas = portas
+            self.status_ip=status_ip
 
     cve_ips_vetor = []
     for child in root.findall("host"):
@@ -329,8 +358,15 @@ def lerArquivoXml(dataAgora,usuario):
                 ip = title.attrib['addr']
         for port in child.findall("ports"):
             portas = []
+            for state in child.findall("status"):
+                print(state)
+                status_ip = state.attrib['state']
             for ports in port.findall("port"):
                 porta = ports.attrib['portid']
+
+                for state in ports.findall("state"):
+                    status_porta = state.attrib['state']
+
                 for serviços in ports.findall("service"):
                     servico = serviços.attrib['name']
                     try:
@@ -344,6 +380,8 @@ def lerArquivoXml(dataAgora,usuario):
                 for teste in ports.findall("script"):
                     for osss in teste.findall("table"):
                         validar = 0
+                        validar_vuln = 0
+
                         try:
 
                             if str(osss.attrib['key'])[:3] == "CVE":
@@ -351,7 +389,19 @@ def lerArquivoXml(dataAgora,usuario):
                                 descricao = ""
                                 validar = 1
 
+
                             for element in osss:
+                                if element.attrib['key'] == 'state':
+                                    estado = element.text
+                                    if estado == "VULNERABLE (Exploitable)" or estado == "VULNERABLE":
+                                        validar_vuln = 1
+                                if element.attrib['key'] == 'scores':
+
+                                    for alou in element.findall("elem"):
+                                        score = alou.text
+
+                                if element.attrib['key'] == 'title':
+                                    titulo = element.text
 
                                 if element.attrib['key'] == 'description':
                                     print(element.attrib['key'])
@@ -361,13 +411,20 @@ def lerArquivoXml(dataAgora,usuario):
                                         descricao = alou.text
                             if validar == 1:
                                 cve_ips_vetor.append(CVE_IPS_2(cve_texto, osss.attrib['key'],descricao))
+                                try:
+                                    classe_vuln_anotar = Vulnerabilidades_Definicoes.objects.get(nome = titulo,descricao= descricao)
+                                except:
+                                    classe_vuln_anotar = Vulnerabilidades_Definicoes.objects.create(nome = titulo,descricao= descricao)
+
+                            if validar_vuln == 1:
+                                vulnerabilidades_vetor.append(Vulnerabilidades2(ip, porta, classe_vuln_anotar, score))
 
                         except:
                             print("não é vulneravel")
 
-                porta_objeto = Porta_representar(porta, servico, produto, versao)
+                porta_objeto = Porta_representar(porta, servico, produto, versao,status_porta)
                 portas.append(porta_objeto)
-            ips.append(IP_representar(ip, portas))
+            ips.append(IP_representar(ip, portas,status_ip))
 
         for os in child.findall("os"):
             contador = 0
@@ -382,6 +439,9 @@ def lerArquivoXml(dataAgora,usuario):
 
                     print(sistema_operacional_principal)
                     print(sistema_operacional_principal_probabilidade)
+                sistemas_operacionais_vetor.append(Sistema_Operacional_representar(str(title.attrib['addr']), sistema_operacional,
+                                            sistema_operacional_principal_probabilidade, contador))
+
 
         """
         for os in child.findall("hostscript"):
@@ -406,9 +466,10 @@ def lerArquivoXml(dataAgora,usuario):
         print(ip.ip)
         try:
             ipObjeto = IP.objects.get(ip=str(ip.ip),rede=rede_vpn,usuario=User.objects.get(username=usuario))
-            ipObjeto.ativo = 1
+            ipObjeto.ativo = ip.status_ip
+            ipObjeto.save()
         except:
-            ipObjeto = IP.objects.create(ip=str(ip.ip),rede=rede_vpn,usuario=User.objects.get(username=usuario),ativo=1)
+            ipObjeto = IP.objects.create(ip=str(ip.ip),rede=rede_vpn,usuario=User.objects.get(username=usuario),ativo=ip.status_ip)
 
         for porta in ip.portas:
             print(porta.porta)
@@ -423,7 +484,8 @@ def lerArquivoXml(dataAgora,usuario):
                                      vulneravel=0,
                                      descricao="",
                                      tipo=0,
-                                     ativo = 0)
+                                     status=porta.status_porta
+                                     )
             except:
 
                 Porta.objects.create(porta=int(porta.porta),
@@ -433,7 +495,18 @@ def lerArquivoXml(dataAgora,usuario):
                                      versao=porta.versao,
                                      vulneravel=0,
                                      descricao="",
-                                     tipo=0)
+                                     tipo=0,ativo = 0,
+                                     status=porta.status_porta
+                                     )
+    for vuln in vulnerabilidades_vetor:
+        ipObjeto = IP.objects.get(ip=str(vuln.ip), rede=rede_vpn, usuario=User.objects.get(username=usuario))
+        portaIp = Porta.objects.get(porta=int(vuln.porta), ip=ipObjeto,ativo = 1)
+
+        score = vuln.CVSS
+        try:
+            Vulnerabilidades.objects.get(ip=ipObjeto,porta=portaIp,tipo=vuln.tipo,path=vuln.path,parametro=vuln.parametro,CVSS=score.split(" ")[0],impacto=vuln.impacto,recomendacao=vuln.recomendacao)
+        except:
+            Vulnerabilidades.objects.create(ip=ipObjeto,porta=portaIp,tipo=vuln.tipo,path=vuln.path,parametro=vuln.parametro,CVSS=score.split(" ")[0],impacto=vuln.impacto,recomendacao=vuln.recomendacao)
 
 
     for cve in cve_ips_vetor:
@@ -452,31 +525,47 @@ def lerArquivoXml(dataAgora,usuario):
         except:
             CVE_IP.objects.create(ip=IP.objects.get(ip=str(cve.ip), rede=rede_vpn),
                                   cve=cve2,descricao=cve.descricao)
+    for sistemas in sistemas_operacionais_vetor:
+        try:
+            so2 = SistemaOperacional.objects.get(nome=sistemas.nome)
+        except:
+            so2 = SistemaOperacional.objects.create(nome=sistemas.nome)
 
+        try:
+            Sistema_IP.objects.get(ip=IP.objects.get(ip=str(sistemas.ip), rede=rede_vpn),
+                                   )
+        except:
+            Sistema_IP.objects.create(ip=IP.objects.get(ip=str(sistemas.ip), rede=rede_vpn),probabilidade=sistemas.probabilidade,posicao=sistemas.posicao,
+                                   sistema=so2)
+
+        print(sistemas.ip)
+        print(sistemas.nome)
+        print(sistemas.probabilidade)
+        print(sistemas.posicao)
 
 def verificarScan():
     return Scan.objects.filter(feito = 0)
 
 def dirbBancoVerificar():
+    contador = 0
 
     try:
-        scan = FfufComandos.objects.filter(feito = 2)
-        for a in scan:
-            verificarArquivoFfuf(a.dataAgora, a.usuario)
+
+        scan = FfufComandos.objects.get(feito = 2)
+
+        verificarArquivoFfuf(scan.dataAgora, scan.usuario)
 
     except:
-        scan = FfufComandos.objects.filter(feito=2)
-        for a in scan:
-            verificarArquivoFfuf(a.dataAgora, a.usuario)
-        contador = 0
+
         for scan in FfufComandos.objects.filter(feito = 0):
             if contador == 0:
-                contador = 1
+                if len(FfufComandos.objects.filter(feito = 2)) == 0:
+                    contador = 1
 
-                print(scan.usuario)
-                os.system(scan.comando)
-                scan.feito = 2
-                scan.save()
+                    print(scan.usuario)
+                    os.system(scan.comando)
+                    scan.feito = 2
+                    scan.save()
             break
 
 
@@ -487,7 +576,9 @@ def sqlmapVerificar():
 
             scan = SqlComandos.objects.filter(feito=2)
             for a in scan:
-                verificarArquivoSqlmap(a.dataAgora, a.usuario)
+
+                    verificarArquivoSqlmap(a.dataAgora, a.usuario)
+
             contador = 0
             for scan in SqlComandos.objects.filter(feito = 0):
                 if contador == 0:
@@ -527,20 +618,39 @@ def verificarArquivoSqlmap(dataAgora, usuario):
 
         scan = SqlComandos.objects.get(dataAgora=dataAgora,
                                         usuario=User.objects.get(username=usuario))
-        saida = subprocess.check_output(f'cat  "{target_file}" | grep "is vulnerable"',
-                                        shell=True).decode("UTF-8")
-        print(saida)
+        try:
+                saida = subprocess.check_output(f'cat  "{target_file}" | grep "is vulnerable"',
+                                            shell=True).decode("UTF-8")
 
-        parametro = ""
-        validar = 0
-        for percorrer in saida:
-            print(percorrer)
-            if validar == 1:
-                parametro = parametro + percorrer
-            if percorrer == "'":
-                validar = validar + 1
-        parametro = parametro[:-1]
 
+                print(saida)
+
+                parametro = ""
+                validar = 0
+                for percorrer in saida:
+                    print(percorrer)
+                    if validar == 1:
+                        parametro = parametro + percorrer
+                    if percorrer == "'":
+                        validar = validar + 1
+                parametro = parametro[:-1]
+        except:
+            saida = subprocess.check_output(f'cat  "{target_file}" | grep "Parameter:"',
+                                            shell=True).decode("UTF-8")
+            parametro = ""
+            validar = 0
+            for percorrer in saida.split(':')[1]:
+                print(percorrer)
+                if validar == 1:
+                    parametro = parametro + percorrer
+                if percorrer == " ":
+                    validar = validar + 1
+            parametro = parametro
+
+            pass
+
+        print(parametro)
+        parametro = parametro.replace(" ","")
         queryparameters = QueryParameteres.objects.filter(diretorio=scan.diretorio)
 
         for query in queryparameters:
@@ -1103,7 +1213,7 @@ def verDominio(request,dominio,rede):
     print("aquiiiii")
     while ipaddress.IPv4Address(ip) != ipaddress.IPv4Address(ipmaximo) + 1:
         ip_objeto = IP.objects.get(ip=ip,rede=vpn)
-        if ip_objeto.ativo == 1:
+        if ip_objeto.ativo == "up":
             ips_vetor.append(ip_objeto)
         ip = ip + 1
 
@@ -1786,7 +1896,7 @@ def assunto(request,id):
     if pentest_objeto.usuario == request.user:
         rede_objeto = pentest_objeto.rede
 
-        ips = IP.objects.filter(ativo=1, rede=rede_objeto)
+        ips = IP.objects.filter(ativo="up", rede=rede_objeto)
 
         for ip in ips:
             print(ip)
@@ -1851,7 +1961,9 @@ def assunto(request,id):
                 "alta": alta,
                 "critica": critica,
                 "hash_veio":hash_veio,
-                "hash_veio2": hash_veio2
+                "hash_veio2": hash_veio2,
+                'ips':ips,
+                'portas':Porta.objects.filter(ativo=1)
 
                 }
         nome["scans"] = verificarScan()
@@ -1873,7 +1985,7 @@ def assunto_ip(request,id,ip):
         ip_vai = IP.objects.get(ip=ip,rede=rede_objeto)
         portas_vai = Porta.objects.filter(ip=ip_vai,ativo=1)
 
-        ips = IP.objects.filter(ativo=1, rede=rede_objeto)
+        ips = IP.objects.filter(ativo="up", rede=rede_objeto)
 
         for ip in ips:
             print(ip)
@@ -1919,6 +2031,11 @@ def assunto_ip(request,id,ip):
         critica_2 = [0]
         hash_veio2 = gerarGraficos(labels, baixa_2, media_2, alta_2, critica_2, 'Quantidade de portas',
                                   'Portas',"Portas no total","Portas Vulneraveis","","")
+        try:
+            sistema_vai = Sistema_IP.objects.get(ip=ip_vai,posicao=1,
+                                       )
+        except:
+            sistema_vai = ""
         nome = {"usuario": request.user,
                     "materia": pentest_objeto.id,
                     "baixa": baixa,
@@ -1930,7 +2047,8 @@ def assunto_ip(request,id,ip):
                     "vulnerabilidades":vulnerabilidades,
                     "cve_ip":CVE_IP.objects.filter(ip=ip_vai),
                 "hash_veio":hash_veio,
-                "hash_veio2": hash_veio2
+                "hash_veio2": hash_veio2,
+                "sistema_operacional":sistema_vai
 
                 }
         nome["scans"] = verificarScan()

@@ -18,7 +18,7 @@ class IP(models.Model):
     class ativo(models.IntegerChoices):
         Desligado = 0
         Ativo = 1
-    ativo = models.IntegerField(default=0)
+    ativo = models.CharField(max_length=30)
 
 
     class Meta:
@@ -89,6 +89,8 @@ class Porta(models.Model):
     tipo = models.IntegerField(default=0)
     ativo = models.IntegerField(default=1)
 
+    status = models.CharField(max_length=30)
+
     def get_Tipo(self):
         lugares_envio = {
             '1': 'Baixa',
@@ -146,7 +148,7 @@ class Sistema_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     sistema = models.ForeignKey(SistemaOperacional, models.CASCADE)
     probabilidade =  models.DecimalField(max_digits=10, decimal_places=5,default=0)
-    ativo =   models.IntegerField(default=0)
+    posicao =   models.IntegerField(default=0)
 
     def __str__(self):
         return self.sistema.nome
@@ -226,7 +228,7 @@ class Exploit_Payload(models.Model):
 
 class SqlComandos(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
-    dataAgora = models.CharField(max_length=31)
+    dataAgora = models.CharField(max_length=32)
     usuario = models.ForeignKey(User, models.CASCADE)
     feito = models.IntegerField(default=0)
     comando = models.CharField(max_length=300)
@@ -253,6 +255,10 @@ class Vulnerabilidades(models.Model):
     impacto = models.CharField(max_length=500)
     recomendacao = models.CharField(max_length=500)
     tratada = models.IntegerField(default=0)
+
+class Vulnerabilidades_Referencias(models.Model):
+    Vulnerabilidades = models.ForeignKey(Vulnerabilidades, models.CASCADE)
+    referencia = models.CharField(max_length=500)
 
 
 
