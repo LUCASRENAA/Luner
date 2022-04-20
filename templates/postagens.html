@@ -173,7 +173,7 @@
             {% for porta in portas %}
 
               <div class="col">
-            Porta aberta: {{ porta.porta }}
+            Porta: {{ porta.porta }} {{ porta.status }}
     </div>
 
                    {% if forloop.counter|divisibleby:3 %}

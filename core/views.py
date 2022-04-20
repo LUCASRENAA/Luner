@@ -7,6 +7,7 @@ import subprocess
 import matplotlib
 import requests
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse, Http404, HttpResponseNotFound
 
 from django.contrib.auth.models import User
@@ -110,8 +111,8 @@ def inicio(request,rede):
 
 
 
-        ips_ativos = IP.objects.filter(rede =rede_objeto )
-        ips_desligados = IP.objects.filter(ativo = 0,rede = rede_objeto)
+        ips_ativos = IP.objects.filter(rede =rede_objeto,ativo="up" )
+        ips_desligados = IP.objects.filter(ativo = "",rede = rede_objeto)
         diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
         print(diretorios)
 
@@ -126,7 +127,7 @@ def inicio(request,rede):
         portas_quantidades = []
         for ips_quantidade in ips_ativos:
             portas_quantidades.append(
-                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1))))
+                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1).exclude(status='closed'))))
 
         rede_pentest = Pentest_Rede.objects.get(rede=rede_objeto)
         queryparameteres = QueryParameteres.objects.all()
@@ -1935,7 +1936,7 @@ def assunto(request,id):
                     critica_2.append(critica)
                     portas_vulneraveis = portas_vulneraveis + len(portas_vuln)
 
-                portas_vai = Porta.objects.filter(ip=ip_vai, ativo=1)
+                portas_vai = Porta.objects.filter(ip=ip_vai, ativo=1,status="open")
                 portas_total = portas_total+len(portas_vai)
 
         hash_veio = gerarGraficos(labels, baixa_2, media_2, alta_2, critica_2, 'Quantidade de vulnerabilidades',
@@ -1963,7 +1964,8 @@ def assunto(request,id):
                 "hash_veio":hash_veio,
                 "hash_veio2": hash_veio2,
                 'ips':ips,
-                'portas':Porta.objects.filter(ativo=1)
+                'portas':Porta.objects.filter(ativo=1,status="open"
+                                              )
 
                 }
         nome["scans"] = verificarScan()
@@ -1976,11 +1978,7 @@ def assunto_ip(request,id,ip):
     pentest_objeto = Pentest_Rede.objects.get(id=id)
 
     if pentest_objeto.usuario == request.user:
-        import pdfkit
-        try:
-            pdfkit.from_url(f'http://127.0.0.1:8000/dominio/{id}/{ip}', 'shaurya.pdf')
-        except:
-            pass
+
         rede_objeto = pentest_objeto.rede
         ip_vai = IP.objects.get(ip=ip,rede=rede_objeto)
         portas_vai = Porta.objects.filter(ip=ip_vai,ativo=1)
