@@ -260,12 +260,10 @@ def scanOpcoes(request):
     return redirect('/')
 
 def xmlBancoVerificar():
-    try:
         for scan in Scan.objects.filter(feito = 0):
             print(scan.usuario)
             verificarArquivoXml(scan.dataAgora,scan.usuario)
-    except:
-        pass
+
 
 
 def verificarArquivoXml(dataAgora,usuario):
@@ -314,7 +312,7 @@ def lerArquivoXml(dataAgora,usuario):
             self.descricao = description
 
     class Vulnerabilidades2:
-        def __init__(self, ip, porta, vuln_tipo, score):
+        def __init__(self, ip, porta, vuln_tipo, score,grau):
             self.ip = ip
             self.porta = porta
             self.tipo = vuln_tipo
@@ -324,6 +322,7 @@ def lerArquivoXml(dataAgora,usuario):
             self.impacto = ""
             self.recomendacao = ""
             self.tratada = 0
+            self.grau = grau
 
     class Sistema_Operacional_representar:
 
@@ -434,34 +433,68 @@ def lerArquivoXml(dataAgora,usuario):
                 sistema_operacional = str(oss.attrib['name'])
 
                 if contador == 1:
-                    print(str(title.attrib['addr']))
+
                     sistema_operacional_principal = str(oss.attrib['name'])
                     sistema_operacional_principal_probabilidade = str(oss.attrib['accuracy'])
 
                     print(sistema_operacional_principal)
                     print(sistema_operacional_principal_probabilidade)
-                sistemas_operacionais_vetor.append(Sistema_Operacional_representar(str(title.attrib['addr']), sistema_operacional,
+                sistemas_operacionais_vetor.append(Sistema_Operacional_representar(str(ip), sistema_operacional,
                                             sistema_operacional_principal_probabilidade, contador))
 
-
-        """
         for os in child.findall("hostscript"):
             for oss in os.findall("script"):
-                    print("id script")
-                    print(oss.attrib['id'])
-                    print('\n')
-                    for osss in oss.findall("table"):
-                        print(str(title.attrib['addr']))
-                        print(porta)
+                print("id script")
+                print(oss.attrib['id'])
+                print('\n')
+                titulo_vuln = ""
+                cve_peguei = ""
+                csvv = 0
+                for osss in oss.findall("table"):
+                    print("cve23")
+                    print(str(ip))
+                    print(porta)
+                    print(osss.attrib['key'])
+                    print(osss.text)
+                    print("\n\n")
+                    for elemm in osss.findall("elem"):
+                        print("orx")
+                        print(elemm.attrib['key'])
+                        if elemm.attrib['key'] == "title":
+                            titulo_vuln = elemm.text
+                        if elemm.attrib['key'] == "state":
+                            stado_vuln = elemm.text
 
-                        print(osss.attrib['key'])
+                        print(elemm.text)
                         print("\n\n")
-                        for elemm in osss.findall("elem"):
-                            print("orx")
-                            print(elemm.attrib['key'])
-                            print(elemm.text)
-                            print("\n\n")
-        """
+                        for elemm2 in osss.findall("table"):
+                            print(elemm2.attrib)
+                            print("eita")
+
+                            if elemm2.attrib['key'] == 'ids':
+                                cve_peguei = elemm2.find("elem").text
+                                print(cve_peguei)
+                            if elemm2.attrib['key'] == 'description':
+                                print(elemm2.text)
+                                print(elemm2.attrib)
+                                descricao = elemm2.find("elem").text
+
+                            if elemm2.attrib['key'] == 'scores':
+                                csvv = elemm2.find("elem").text
+
+                if ip != "" and titulo_vuln != "":
+                    try:
+                        classe_vuln_anotar = Vulnerabilidades_Definicoes.objects.get(nome = titulo_vuln, descricao = descricao)
+                    except:
+                        classe_vuln_anotar = Vulnerabilidades_Definicoes.objects.create(nome=titulo_vuln,
+                                                                                     descricao=descricao)
+
+                    # cve_ips_vetor.append(classe_vuln_anotar)
+                    if cve_peguei != "":
+                        cve_ips_vetor.append(CVE_IPS_2(ip, cve_peguei, descricao))
+                    vulnerabilidades_vetor.append(Vulnerabilidades2(ip, porta, classe_vuln_anotar, csvv, stado_vuln))
+
+
     print("---------ips---------")
     for ip in ips:
         print(ip.ip)
@@ -505,9 +538,9 @@ def lerArquivoXml(dataAgora,usuario):
 
         score = vuln.CVSS
         try:
-            Vulnerabilidades.objects.get(ip=ipObjeto,porta=portaIp,tipo=vuln.tipo,path=vuln.path,parametro=vuln.parametro,CVSS=score.split(" ")[0],impacto=vuln.impacto,recomendacao=vuln.recomendacao)
+            Vulnerabilidades.objects.get(ip=ipObjeto,porta=portaIp,tipo=vuln.tipo,path=vuln.path,parametro=vuln.parametro,CVSS=score,impacto=vuln.impacto,recomendacao=vuln.recomendacao,grau=vuln.grau)
         except:
-            Vulnerabilidades.objects.create(ip=ipObjeto,porta=portaIp,tipo=vuln.tipo,path=vuln.path,parametro=vuln.parametro,CVSS=score.split(" ")[0],impacto=vuln.impacto,recomendacao=vuln.recomendacao)
+            Vulnerabilidades.objects.create(ip=ipObjeto,porta=portaIp,tipo=vuln.tipo,path=vuln.path,parametro=vuln.parametro,CVSS=score,impacto=vuln.impacto,recomendacao=vuln.recomendacao,grau=vuln.grau)
 
 
     for cve in cve_ips_vetor:
@@ -532,13 +565,17 @@ def lerArquivoXml(dataAgora,usuario):
         except:
             so2 = SistemaOperacional.objects.create(nome=sistemas.nome)
 
+        variavel = sistemas.ip
         try:
-            Sistema_IP.objects.get(ip=IP.objects.get(ip=str(sistemas.ip), rede=rede_vpn),
-                                   )
+            try:
+                Sistema_IP.objects.get(ip=IP.objects.get(ip=str(sistemas.ip), rede=rede_vpn),
+                                       )
+            except:
+                Sistema_IP.objects.create(ip=IP.objects.get(ip=str(sistemas.ip), rede=rede_vpn),probabilidade=sistemas.probabilidade,posicao=sistemas.posicao,
+                                       sistema=so2)
         except:
-            Sistema_IP.objects.create(ip=IP.objects.get(ip=str(sistemas.ip), rede=rede_vpn),probabilidade=sistemas.probabilidade,posicao=sistemas.posicao,
-                                   sistema=so2)
-
+            #quando vim um ip que na verdade é um endereço fisico
+            pass
         print(sistemas.ip)
         print(sistemas.nome)
         print(sistemas.probabilidade)
@@ -1846,14 +1883,15 @@ def verificarQuantidadeVulnerabilidade(param,request,id_rede,ip):
     portas_vul = []
     for vuln in vulns:
             print(vuln)
-            if float(vuln.CVSS) >= 7.5:
+            cvss_inteiro = float(str(vuln.getIntegerTratar()).split(" ")[0])
+            if float(cvss_inteiro) >= 7.5:
                 critica = critica + 1
-            if float(vuln.CVSS) < 7.5 and float(vuln.CVSS) >= 5:
+            if float(cvss_inteiro) < 7.5 and float(cvss_inteiro) >= 5:
                 alta = alta + 1
-            if float(vuln.CVSS) < 5 and float(vuln.CVSS) >= 2.5:
+            if float(cvss_inteiro) < 5 and float(cvss_inteiro) >= 2.5:
                 intermediaria = intermediaria + 1
 
-            if float(vuln.CVSS) < 2.5:
+            if float(cvss_inteiro) < 2.5:
                 baixa = baixa + 1
             if vuln.porta.porta in portas_vul:
                 pass

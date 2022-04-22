@@ -118,6 +118,7 @@ class CVE_IP(models.Model):
     cve = models.ForeignKey(CVE, models.CASCADE)
     descricao = models.CharField(max_length=500)
     vulneravel = models.IntegerField(default=0)
+    titulo = models.CharField(max_length=500)
 
 
 class Pentest(models.Model):
@@ -251,10 +252,18 @@ class Vulnerabilidades(models.Model):
     tipo = models.ForeignKey(Vulnerabilidades_Definicoes, models.CASCADE)
     path = models.CharField(max_length=50)
     parametro = models.CharField(max_length=50)
-    CVSS = models.DecimalField(max_digits=10, decimal_places=5)
+    CVSS = models.CharField(max_length=100)
     impacto = models.CharField(max_length=500)
     recomendacao = models.CharField(max_length=500)
     tratada = models.IntegerField(default=0)
+    grau = models.CharField(max_length=30,default="VULNERABLE")
+
+    def getIntegerTratar(self):
+        try:
+            return int(self.CVSS.split(" ")[0])
+        except:
+            return self.CVSS
+
 
 class Vulnerabilidades_Referencias(models.Model):
     Vulnerabilidades = models.ForeignKey(Vulnerabilidades, models.CASCADE)
