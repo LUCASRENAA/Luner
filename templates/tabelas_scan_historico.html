@@ -1,0 +1,51 @@
+<h1>Ips encontrados</h1>
+
+{% for ip in ips %}
+<h1>Ip</h1>
+
+<p>{{ ip.ip }}: {{ ip.status_ip }}</p>
+
+
+<h1>Portas encontradas</h1>
+
+{% for porta in ip.portas %}
+<p>{{ porta.porta }}: {{ porta.status_porta }}</p>
+{% endfor %}
+{% endfor %}
+
+{% for vuln in vulns %}
+<h1>Vulnerabilidade encontrada</h1>
+<p>{{vuln.ip }}</p>
+<p>{{vuln.porta }}</p>
+<p>{{vuln.tipo.nome }}</p>
+<p>{{vuln.tipo.descricao }}</p>
+
+<p>{{vuln.path }}</p>
+<p>{{vuln.parametro }}</p>
+<p>{{vuln.CVSS }}</p>
+<p>{{vuln.impacto }}</p>
+<p>{{vuln.recomendacao }}</p>
+<p>{{vuln.tratada }}</p>
+<p>{{vuln.grau }}</p>
+{% endfor %}
+{% for cve in cves %}
+<h1>CVE</h1>
+<p>{{ cve.ip }}</p>
+
+<p>{{ cve.cve }}</p>
+<p>{{ cve.descricao }}</p>
+{% endfor %}
+<h1>Sistema</h1>
+{% for sistema in sistemas %}
+<p>{{ sistema.ip }}</p>
+<p>{{ sistema.nome }}</p>
+<p>{{ sistema.probabilidade }}</p>
+
+{% endfor %}
+
+<h1>Hostnames</h1>
+{% for hostname in hostnames  %}
+<p>{{ hostname.ip }}</p>
+
+<p>{{ hostname.hostname }}</p>
+{% endfor %}

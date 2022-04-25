@@ -88,6 +88,22 @@ def submit_registro(request):
     return HttpResponse('<h1> faça um post </h1>')
 
 
+@login_required(login_url='/login/')
+def scan_historico(request):
+
+    dados = {"scans": Scan.objects.filter(usuario = request.user),'pagina':2}
+    return render(request, 'historico_scan.html', dados)
+
+@login_required(login_url='/login/')
+def scan_id_historico(request,id):
+    scan = Scan.objects.get(id=int(id))
+    ips,vulnerabilidades_vetor,cve_ips_vetor,sistemas_operacionais_vetor,ip_hostname_vetor = lerArquivoXmlHistorico(scan.dataAgora,scan.usuario,"")
+
+
+    dados = {'ips':ips,"vulns":vulnerabilidades_vetor,"cves":cve_ips_vetor,"sistemas":sistemas_operacionais_vetor,
+             "hostnames":ip_hostname_vetor,'pagina':1}
+    return render(request, 'historico_scan.html', dados)
+
 
 @login_required(login_url='/login/')
 def inicio(request,rede):
@@ -2185,3 +2201,245 @@ def gerarGraficos(labels,baixa_2,media_2,alta_2,critica_2,ylabel,set_title,label
     plt.show()
     plt.savefig("static/graficos/" + hash)
     return hash
+
+
+def lerArquivoXmlHistorico(dataAgora, usuario, arquivo):
+    import xml.etree.ElementTree as ET
+    print(usuario)
+    if arquivo == "":
+        tree = ET.parse("arquivos/nmap/" + str(dataAgora) + str(usuario) + ".xml")
+    else:
+        tree = ET.parse(arquivo)
+    root = tree.getroot()
+    """
+    scan = Scan.objects.get(dataAgora=dataAgora,
+                            usuario=User.objects.get(username=usuario))
+    rede_vpn = scan.ip.rede
+    """
+    ips = []
+    sistemas_operacionais_vetor = []
+    vulnerabilidades_vetor = []
+
+    class Vulnerabilidades_Definicoes2:
+        def __init__(self, title, description):
+            self.nome = title
+            self.descricao = description
+
+    class Vulnerabilidades2:
+        def __init__(self, ip, porta, vuln_tipo, score, grau):
+            self.ip = ip
+            self.porta = porta
+            self.tipo = vuln_tipo
+            self.path = ""
+            self.parametro = ""
+            self.CVSS = score
+            self.impacto = ""
+            self.recomendacao = ""
+            self.tratada = 0
+            self.grau = grau
+
+    class Sistema_Operacional_representar:
+
+        def __init__(self, ip, nome, probabilidade, posicao):
+            self.ip = ip
+            self.nome = nome
+            self.posicao = posicao
+            self.probabilidade = probabilidade
+
+    class CVE_IPS_2:
+        def __init__(self, ip, cve, descricao):
+            self.ip = ip
+            self.cve = cve
+            self.descricao = descricao
+
+    class Porta_representar:
+        def __init__(self, porta, servico, produto, versao, status_porta):
+            self.porta = porta
+            self.servico = servico
+            self.produto = produto
+            self.versao = versao
+            self.status_porta = status_porta
+
+    class IP_representar:
+        def __init__(self, ip, portas, status_ip):
+            self.ip = ip
+            self.portas = portas
+            self.status_ip = status_ip
+
+    class IP_hostname:
+        def __init__(self, ip, hostname):
+            self.ip = ip
+            self.hostname = hostname
+
+    cve_ips_vetor = []
+    ip_hostname_vetor = []
+    for child in root.findall("host"):
+        for title in child.findall("address"):
+            if title.attrib['addrtype'] == 'ipv4':
+                ip = title.attrib['addr']
+        for hostname in child.findall("hostnames"):
+            print(hostname)
+            for a in hostname:
+                hostname = str(a.attrib["name"])
+                ip_hostname_vetor.append(IP_hostname(ip, hostname))
+
+        for port in child.findall("ports"):
+            portas = []
+            for state in child.findall("status"):
+                status_ip = state.attrib['state']
+            for ports in port.findall("port"):
+                porta = ports.attrib['portid']
+
+                for state in ports.findall("state"):
+                    status_porta = state.attrib['state']
+
+                for serviços in ports.findall("service"):
+                    servico = serviços.attrib['name']
+                    try:
+                        produto = serviços.attrib['product']
+                    except:
+                        produto = "Não existe"
+                    try:
+                        versao = serviços.attrib['version']
+                    except:
+                        versao = 0
+                for teste in ports.findall("script"):
+                    for osss in teste.findall("table"):
+                        validar = 0
+                        validar_vuln = 0
+
+                        try:
+
+                            if str(osss.attrib['key'])[:3] == "CVE":
+                                cve_texto = str(title.attrib['addr'])
+                                descricao = ""
+                                validar = 1
+
+                            for element in osss:
+                                if element.attrib['key'] == 'state':
+                                    estado = element.text
+                                    if estado == "VULNERABLE (Exploitable)" or estado == "VULNERABLE":
+                                        validar_vuln = 1
+                                if element.attrib['key'] == 'scores':
+
+                                    for alou in element.findall("elem"):
+                                        score = alou.text
+
+                                if element.attrib['key'] == 'title':
+                                    titulo = element.text
+
+                                if element.attrib['key'] == 'description':
+                                    print(element.attrib['key'])
+
+                                    for alou in element.findall("elem"):
+                                        print(alou.text)
+                                        descricao = alou.text
+                            if validar == 1:
+                                cve_ips_vetor.append(CVE_IPS_2(cve_texto, osss.attrib['key'], descricao))
+                                print(titulo)
+                                print(descricao)
+                                classe_vuln_anotar = Vulnerabilidades_Definicoes2(titulo,descricao)
+                            if validar_vuln == 1:
+                                vulnerabilidades_vetor.append(Vulnerabilidades2(ip, porta, classe_vuln_anotar, score))
+
+                        except:
+                            print("não é vulneravel")
+
+                porta_objeto = Porta_representar(porta, servico, produto, versao, status_porta)
+                portas.append(porta_objeto)
+            ips.append(IP_representar(ip, portas, status_ip))
+
+        for os in child.findall("os"):
+            contador = 0
+            for oss in os.findall("osmatch"):
+                contador = contador + 1
+                sistema_operacional = str(oss.attrib['name'])
+
+                if contador == 1:
+                    sistema_operacional_principal = str(oss.attrib['name'])
+                    sistema_operacional_principal_probabilidade = str(oss.attrib['accuracy'])
+
+                    print(sistema_operacional_principal)
+                    print(sistema_operacional_principal_probabilidade)
+                sistemas_operacionais_vetor.append(Sistema_Operacional_representar(str(ip), sistema_operacional,
+                                                                                   sistema_operacional_principal_probabilidade,
+                                                                                   contador))
+
+        for os in child.findall("hostscript"):
+            for oss in os.findall("script"):
+                print("id script")
+                print(oss.attrib['id'])
+                print('\n')
+                titulo_vuln = ""
+                cve_peguei = ""
+                csvv = 0
+                for osss in oss.findall("table"):
+                    print("cve23")
+                    print(str(ip))
+                    print(porta)
+                    print(osss.attrib['key'])
+                    print(osss.text)
+                    print("\n\n")
+                    for elemm in osss.findall("elem"):
+                        print("orx")
+                        print(elemm.attrib['key'])
+                        if elemm.attrib['key'] == "title":
+                            titulo_vuln = elemm.text
+                        if elemm.attrib['key'] == "state":
+                            stado_vuln = elemm.text
+
+                        print(elemm.text)
+                        print("\n\n")
+                        for elemm2 in osss.findall("table"):
+                            print(elemm2.attrib)
+                            print("eita")
+
+                            if elemm2.attrib['key'] == 'ids':
+                                cve_peguei = elemm2.find("elem").text
+                                print(cve_peguei)
+                            if elemm2.attrib['key'] == 'description':
+                                print(elemm2.text)
+                                print(elemm2.attrib)
+                                descricao = elemm2.find("elem").text
+
+                            if elemm2.attrib['key'] == 'scores':
+                                csvv = elemm2.find("elem").text
+
+                if ip != "" and titulo_vuln != "":
+                    print(titulo_vuln)
+                    print(descricao)
+
+                    classe_vuln_anotar = Vulnerabilidades_Definicoes2(cve_peguei,descricao)
+                    if cve_peguei != "":
+                        cve_ips_vetor.append(CVE_IPS_2(ip, cve_peguei, descricao))
+                    vulnerabilidades_vetor.append(Vulnerabilidades2(ip, porta, classe_vuln_anotar, csvv, stado_vuln))
+
+    print("---------ips---------")
+    for ip in ips:
+        print(ip.ip)
+        for porta in ip.portas:
+            print(porta.porta)
+
+    for vuln in vulnerabilidades_vetor:
+        print("vulnerabilidades")
+        print(vuln)
+        score = vuln.CVSS
+
+    for cve in cve_ips_vetor:
+        print("-----cves----")
+        print(cve.cve)
+        print(cve.ip)
+
+    for sistemas in sistemas_operacionais_vetor:
+        print("sistemas operacionais")
+        print(sistemas.ip)
+        print(sistemas.nome)
+        print(sistemas.probabilidade)
+        print(sistemas.posicao)
+
+    for hostname_ler in ip_hostname_vetor:
+        print("hostname")
+        print(hostname_ler.hostname)
+        print(hostname_ler.ip)
+
+    return ips,vulnerabilidades_vetor,cve_ips_vetor,sistemas_operacionais_vetor,ip_hostname_vetor

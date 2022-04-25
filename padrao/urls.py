@@ -49,6 +49,10 @@ urlpatterns = [
                   path('sqlmap/<id>', views.sqlmap),
 
                   path('inicio/<rede>',views.inicio),
+                  path('scan/<id>', views.scan_id_historico),
+                  path('scan/', views.scan_historico),
+
+
                   path('inicio/scanopcao/ip/rede', views.scanOpcoes),
                   path('inicio/dirb/ip/rede', views.dirbOpcoes),
 

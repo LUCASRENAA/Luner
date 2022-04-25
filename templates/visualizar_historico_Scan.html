@@ -1,0 +1,30 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Id</th>
+      <th scope="col">Scan</th>
+      <th scope="col">Comando</th>
+      <th scope="col">Ip</th>
+              <th scope="col">Rede</th>
+              <th scope="col">Feito</th>
+
+    </tr>
+  </thead>
+  <tbody>
+
+            {% for scan in scans %}
+                <tr>
+            <td><a href="/scan/{{ scan.id }}">{{ scan.id}}</a></td>
+
+            <td>{{ scan}}</td>
+            <td>{{ scan.comando }}</td>
+            <td>{{ scan.ip.ip }}</td>
+                                <td>{{ scan.ip.rede.rede }}</td>
+
+            <td>{{ scan.feito }}</td>
+
+                       </tr>
+
+            {% endfor %}
+  </tbody>
+</table>
