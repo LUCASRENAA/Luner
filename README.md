@@ -59,4 +59,15 @@ Ainda em desenvolvimento
 
 ## Como usar?
 
+### Primeiro acesso
+
+```
+sudo apt-get install libpq-dev python3-dev
+sudo pip install psycopg2
+pip3 install -r requirements.txt 
+python3 manage.py migrate
+python3 manage.py createsuperuser 
+```
+
+
 Ainda em desenvolvimento
