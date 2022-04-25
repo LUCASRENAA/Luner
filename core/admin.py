@@ -4,10 +4,14 @@ from core.models import Scan,Diretorios,IP,Rede,FfufComandos,Sistema_IP,SistemaO
 
 from core.models import WhatWebComandos,WhatWeb,WhatWebIP,Dominio,inetNum,dominioinetNum,spfDominio,SenhaMsfConsole,SubDominio
 
-from core.models import ExploitRodar,Exploit_Payload,QueryParameteres,SqlComandos,Etapas,Vulnerabilidades,Vulnerabilidades_Definicoes
+from core.models import ExploitRodar,Exploit_Payload,\
+    QueryParameteres,SqlComandos,Etapas,Vulnerabilidades,\
+    Vulnerabilidades_Definicoes,Hostname,Hostname_IP
 admin.site.register(ExploitRodar)
 admin.site.register(Exploit_Payload)
 admin.site.register(QueryParameteres)
+admin.site.register(Hostname)
+admin.site.register(Hostname_IP)
 
 admin.site.register(SqlComandos)
 admin.site.register(Vulnerabilidades)

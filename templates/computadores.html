@@ -35,7 +35,14 @@
 </h6>
 
 
-        <button   class="btn btn-dark" type="button"  data-toggle="modal" data-target="#exampleModalCenter{{ ip.id }}" > IP: {{ ip.ip }}
+        <button   class="btn btn-dark" type="button"  data-toggle="modal" data-target="#exampleModalCenter{{ ip.id }}" id="botao_ip_id_{{ ip.id }}"> IP: {{ ip.ip }}  {% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+            <script>
+                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ hostname.hostname }}";
+            </script>
+            {% endif %}
+
+        {% endfor %}
 </button>
 
 </i>
@@ -54,6 +61,15 @@
         </button>
       </div>
       <div class="modal-body">
+          <p>
+            <h1>Hostnames</h1></p>
+{% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+         <p>{{ hostname.hostname }}</p>
+        {% endif %}
+
+        {% endfor %}
+          <hr>
 <h1>Portas</h1>
           <p></p>
           <div align="">
@@ -134,3 +150,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
 
+<form action="/handle_xml_upload/" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <input type="file" name="xmlfile">
+<input class="form-control" name="rede_vpn" value="{{ rede_vpn.id }}">
+<input class="form-control" name="comando" value="">
+
+    <input type="submit" value="upload xml file">
+</form>

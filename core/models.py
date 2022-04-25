@@ -6,6 +6,9 @@ from django.db import models
 class Rede(models.Model):
     rede = models.CharField(max_length=50)
 
+
+
+
 class IP(models.Model):
     usuario = models.ForeignKey(User, models.CASCADE)
     rede = models.ForeignKey(Rede, models.CASCADE)
@@ -26,6 +29,14 @@ class IP(models.Model):
     def __str__(self):
         return (f'{self.ip} -{self.rede} ')
 
+class Hostname(models.Model):
+    hostname = models.CharField(max_length=50)
+    def __str__(self):
+        return (f'{self.hostname}')
+
+class Hostname_IP(models.Model):
+    ip = models.ForeignKey(IP, models.CASCADE)
+    hostname = models.ForeignKey(Hostname, models.CASCADE)
 class Scan(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     dataAgora = models.CharField(max_length=50)
@@ -278,3 +289,16 @@ class Etapas(models.Model):
 
     def __str__(self):
         return self.ip.ip
+
+
+class Plugin(models.Model):
+    nome_arquivo = models.CharField(max_length=100)
+
+"""
+class Plugin_Scan(models.Model):
+    plugin = models.ForeignKey(Plugin, models.CASCADE)
+    class tipo(models.IntegerChoices):
+        ip = 0
+        Internet = 1
+    tipo = models.IntegerField(default=0)
+"""

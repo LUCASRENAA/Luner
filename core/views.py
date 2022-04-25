@@ -3,6 +3,7 @@ import hashlib
 import ipaddress
 import json
 import subprocess
+from django.core.files.storage import default_storage
 
 import matplotlib
 import requests
@@ -33,7 +34,7 @@ from pymetasploit3.msfrpc import MsfRpcClient
 from core.models import Scan, IP, Rede, FfufComandos, Diretorios, Porta, CVE_IP, CVE, SistemaOperacional, Sistema_IP, \
     Pentest_Rede, WhatWebComandos, WhatWeb, WhatWebIP, inetNum, dominioinetNum, Dominio, spfDominio, Emails, \
     SenhaMsfConsole, SubDominio, ExploitRodar, Exploit_Payload, QueryParameteres, SqlComandos, Etapas, Vulnerabilidades, \
-    Vulnerabilidades_Definicoes
+    Vulnerabilidades_Definicoes, Hostname, Hostname_IP
 
 
 def login_user(request):
@@ -131,7 +132,10 @@ def inicio(request,rede):
 
         rede_pentest = Pentest_Rede.objects.get(rede=rede_objeto)
         queryparameteres = QueryParameteres.objects.all()
-        dados = {'redepentest':rede_pentest,'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
+
+        hostnames = Hostname_IP.objects.filter(ip__rede = rede_objeto)
+        dados = {'redepentest':rede_pentest, 'hostnames':hostnames,
+                 'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
         return render(request,'inicio.html',dados)
 
 
@@ -250,6 +254,7 @@ def scanOpcoes(request):
     usuario  = User.objects.get(id=request.user.id)
     vpn = Rede.objects.get(id=rede_vpn)
     ip = verificarSeExisteSeNaoCriar(ipstring,usuario,vpn)
+    dataAgora = dataAtual().replace(' ','')
 
     Scan.objects.create(ip = ip,
                         dataAgora = dataAgora,
@@ -260,9 +265,12 @@ def scanOpcoes(request):
     return redirect('/')
 
 def xmlBancoVerificar():
+    try:
         for scan in Scan.objects.filter(feito = 0):
             print(scan.usuario)
             verificarArquivoXml(scan.dataAgora,scan.usuario)
+    except:
+        pass
 
 
 
@@ -273,7 +281,7 @@ def verificarArquivoXml(dataAgora,usuario):
         print("alo")
     #print(res)
     try:
-        lerArquivoXml(dataAgora,usuario)
+        lerArquivoXml(dataAgora,usuario,"")
         scan = Scan.objects.get(dataAgora = dataAgora,
                                         usuario = User.objects.get(username= usuario))
         scan.feito = 1
@@ -281,10 +289,11 @@ def verificarArquivoXml(dataAgora,usuario):
     except:
         pass
 
-    lerArquivoXml(dataAgora, usuario)
+    lerArquivoXml(dataAgora, usuario,"")
     scan = Scan.objects.get(dataAgora=dataAgora,
                             usuario=User.objects.get(username=usuario))
     scan.feito = 1
+
     scan.save()
 
 
@@ -293,10 +302,13 @@ def verificarArquivoXml(dataAgora,usuario):
 
 
 
-def lerArquivoXml(dataAgora,usuario):
+def lerArquivoXml(dataAgora,usuario,arquivo):
     import xml.etree.ElementTree as ET
     print(usuario)
-    tree = ET.parse("arquivos/nmap/" + str(dataAgora) + str(usuario) + ".xml")
+    if arquivo == "":
+        tree = ET.parse("arquivos/nmap/" + str(dataAgora) + str(usuario) + ".xml")
+    else:
+        tree = ET.parse(arquivo)
     root = tree.getroot()
 
     scan = Scan.objects.get(dataAgora=dataAgora,
@@ -356,6 +368,28 @@ def lerArquivoXml(dataAgora,usuario):
         for title in child.findall("address"):
             if title.attrib['addrtype'] == 'ipv4':
                 ip = title.attrib['addr']
+        for hostname in child.findall("hostnames"):
+            print(hostname)
+            for a in hostname:
+
+                try:
+                    ipObjeto = IP.objects.get(ip=str(ip), rede=rede_vpn, usuario=User.objects.get(username=usuario))
+
+                except:
+                    ipObjeto = IP.objects.create(ip=str(ip), rede=rede_vpn,
+                                                 usuario=User.objects.get(username=usuario),ativo=0)
+                hostname = str(a.attrib["name"])
+                try:
+                    hostname_objeto = Hostname.objects.get(hostname=hostname)
+                except:
+                    hostname_objeto = Hostname.objects.create(hostname=hostname)
+                try:
+                    Hostname_IP.objects.get(hostname=hostname_objeto,
+                                            ip=ipObjeto)
+                except:
+                    Hostname_IP.objects.create(hostname=hostname_objeto,
+                                            ip=ipObjeto)
+
         for port in child.findall("ports"):
             portas = []
             for state in child.findall("status"):
@@ -580,7 +614,8 @@ def lerArquivoXml(dataAgora,usuario):
         print(sistemas.nome)
         print(sistemas.probabilidade)
         print(sistemas.posicao)
-
+    scan.feito = 1
+    scan.save()
 def verificarScan():
     return Scan.objects.filter(feito = 0)
 
@@ -1801,6 +1836,33 @@ def sqlmap(request,id):
                                 comando=comando,
                                 porta=porta,
                                diretorio=diretorio_objeto)
+
+@login_required(login_url='/login/')
+def handle_xml_upload(request):
+    xmlfile = request.FILES['xmlfile']
+    print(xmlfile)
+    rede_vpn = request.POST.get('rede_vpn')
+    comando = request.POST.get('comando')
+
+    ip = IP.objects.filter(rede = Rede.objects.get(id=rede_vpn))[0]
+    dataAgora = dataAtual().replace(' ', '')
+
+    Scan.objects.create(ip=ip,
+                        dataAgora=dataAgora,
+                        usuario=User.objects.get(username=request.user),
+                        feito=0,
+                        comando=comando,
+                        )
+    usuario = request.user
+    lerArquivoXml(dataAgora,usuario,xmlfile)
+
+    filename =str(xmlfile)
+    with open(filename, 'wb+') as f:
+        for chunk in xmlfile.chunks():
+            f.write(chunk)
+    os.system(f'mv {filename} arquivos/nmap/"{dataAgora}{request.user}".xml')
+    return HttpResponse(xmlfile)
+
 @login_required(login_url='/login/')
 def parserSite(request,id):
         try:

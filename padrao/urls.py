@@ -56,8 +56,9 @@ urlpatterns = [
     path('login/submit',views.submit_login),
 
                   path('inicio/', RedirectView.as_view(url='/inicio/WQFQWFUQWHFQWHFQWHFIWIF')),
+              path('handle_xml_upload/', views.handle_xml_upload),
 
-                  path('dominio', views.cursos),
+              path('dominio', views.cursos),
                   path('dominio/<id>', views.assunto),
                   path('dominio/<id>/<ip>', views.assunto_ip),
                   #path('pdf', views.pdfteste),
