@@ -1,51 +1,184 @@
-<h1>Ips encontrados</h1>
 
 {% for ip in ips %}
-<h1>Ip</h1>
 
-<p>{{ ip.ip }}: {{ ip.status_ip }}</p>
-
-
-<h1>Portas encontradas</h1>
-
-{% for porta in ip.portas %}
-<p>{{ porta.porta }}: {{ porta.status_porta }}</p>
-{% endfor %}
-{% endfor %}
-
-{% for vuln in vulns %}
-<h1>Vulnerabilidade encontrada</h1>
-<p>{{vuln.ip }}</p>
-<p>{{vuln.porta }}</p>
-<p>{{vuln.tipo.nome }}</p>
-<p>{{vuln.tipo.descricao }}</p>
-
-<p>{{vuln.path }}</p>
-<p>{{vuln.parametro }}</p>
-<p>{{vuln.CVSS }}</p>
-<p>{{vuln.impacto }}</p>
-<p>{{vuln.recomendacao }}</p>
-<p>{{vuln.tratada }}</p>
-<p>{{vuln.grau }}</p>
-{% endfor %}
-{% for cve in cves %}
-<h1>CVE</h1>
-<p>{{ cve.ip }}</p>
-
-<p>{{ cve.cve }}</p>
-<p>{{ cve.descricao }}</p>
-{% endfor %}
-<h1>Sistema</h1>
-{% for sistema in sistemas %}
-<p>{{ sistema.ip }}</p>
-<p>{{ sistema.nome }}</p>
-<p>{{ sistema.probabilidade }}</p>
-
-{% endfor %}
-
-<h1>Hostnames</h1>
 {% for hostname in hostnames  %}
+{% if ip.ip == hostname.ip %}
+
 <p>{{ hostname.ip }}</p>
 
 <p>{{ hostname.hostname }}</p>
+{% endif %}
 {% endfor %}
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">IP</th>
+      <th scope="col">Sistema operacional</th>
+      <th scope="col">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <td>{{ ip.ip }} </td>
+      <td><button type="button" id="botao_ip_id_{{ ip.id }}" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Ver os outros sistemas</button></td>
+      <td>{{ ip.status_ip }}</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<!-- Button trigger modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Outros possiveis sistemas ({{ ip.ip }})</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+{% for sistema in sistemas %}
+{% if ip.ip == sistema.ip %}
+
+ <script>
+            if ( document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML === "Ver os outros sistemas")
+                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ sistema.nome }}";
+            </script>
+
+<p>Sistema operacional: {{ sistema.nome }}</p>
+<p>Probabilidade: {{ sistema.probabilidade }}%</p>
+{% endif %}
+{% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Porta</th>
+      <th scope="col">Servico</th>
+      <th scope="col">Produto</th>
+              <th scope="col">Versão</th>
+      <th scope="col">Status</th>
+
+    </tr>
+  </thead>
+  <tbody>
+
+
+{% for porta in ip.portas %}
+
+    <tr>
+      <td>{{ porta.porta }} </td>
+      <td>{{ porta.servico }}</td>
+              <td>{{ porta.produto }}</td>
+      <td>{{ porta.versao }}</td>
+      <td>{{ porta.status_porta }}</td>
+
+    </tr>
+
+{% endfor %}
+
+  </tbody>
+</table>
+    {% if  vulns|length != 0 %}
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Identificador</th>
+      <th scope="col">Descrição</th>
+      <th scope="col">Porta</th>
+      <th scope="col">Path</th>
+              <th scope="col">Parametro</th>
+              <th scope="col">Impacto</th>
+              <th scope="col">CVSS</th>
+              <th scope="col">Recomendação</th>
+              <th scope="col">Corrigida</th>
+
+    </tr>
+  </thead>
+  <tbody>
+            {% for vulnerabilidade in vulns %}
+{% if ip.ip == vulnerabilidade.ip %}
+
+
+
+
+
+    <tr>
+      <th scope="row">{{ vulnerabilidade.tipo.nome }}</th>
+
+        <th scope="row">{{ vulnerabilidade.tipo.descricao }} </th>
+                       <th scope="row">{{ vulnerabilidade.porta }}</th>
+                          <th scope="row">{{ vulnerabilidade.path }} </th>
+                          <th scope="row">{{ vulnerabilidade.parametro }}</th>
+                        <th scope="row">{{ vulnerabilidade.impacto }} {{ vulnerabilidade.getIntegerTratar }} </th>
+                                      <th scope="row">{{ vulnerabilidade.CVSS }} </th>
+                                    <th scope="row">{{ vulnerabilidade.recomendacao }}  </th>
+            {% if vulnerabilidade.tratada == 0 %}
+            <th scope="row">Vulnerabilidade ainda não foi tratada</th>
+            {% endif %}
+                               {% if vulnerabilidade.tratada == 1 %}
+           <th scope="row">Vulnerabilidade em correção</th>
+            {% endif %}
+
+                    {% if vulnerabilidade.tratada == 2 %}
+              <th scope="row">Vulnerabilidade resolvida</th>
+            {% endif %}
+
+    </tr>
+
+
+
+            {% endif %}
+
+            {% endfor %}
+              </tbody>
+</table>
+                      {% endif%}
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Identificador</th>
+      <th scope="col">Descrição</th>
+
+
+    </tr>
+  </thead>
+  <tbody>
+
+{% for cve in cves %}
+
+{% if ip.ip == cve.ip %}
+<tr>
+        <th scope="row">{{ cve.cve }} </th>
+        <th scope="row">{{ cve.descricao }} </th>
+
+</tr>
+{% endif %}
+{% endfor %}
+       </tbody>
+</table>
+
+
+
+{% endfor %}
+
+

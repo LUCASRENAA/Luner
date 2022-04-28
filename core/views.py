@@ -99,9 +99,29 @@ def scan_id_historico(request,id):
     scan = Scan.objects.get(id=int(id))
     ips,vulnerabilidades_vetor,cve_ips_vetor,sistemas_operacionais_vetor,ip_hostname_vetor = lerArquivoXmlHistorico(scan.dataAgora,scan.usuario,"")
 
+    critica = 0
+    alta = 0
+    intermediaria = 0
+    baixa = 0
+    informativa = 0
+    for vuln in vulnerabilidades_vetor:
+        cvss_inteiro = float(str(vuln.getIntegerTratarString()).split(" ")[0])
+        if float(cvss_inteiro) >= 7.5:
+            critica = critica + 1
+        if float(cvss_inteiro) < 7.5 and float(cvss_inteiro) >= 5:
+            alta = alta + 1
+        if float(cvss_inteiro) < 5 and float(cvss_inteiro) >= 2.5:
+            intermediaria = intermediaria + 1
+
+        if float(cvss_inteiro) < 2.5 and float(cvss_inteiro) > 0:
+            baixa = baixa + 1
+
+        if float(cvss_inteiro) == 0:
+            informativa = informativa + 1
 
     dados = {'ips':ips,"vulns":vulnerabilidades_vetor,"cves":cve_ips_vetor,"sistemas":sistemas_operacionais_vetor,
-             "hostnames":ip_hostname_vetor,'pagina':1}
+             "hostnames":ip_hostname_vetor,'pagina':1,
+             "critica":critica,"alta":alta,"intermediaria":intermediaria,"baixa":baixa,"informativa":informativa}
     return render(request, 'historico_scan.html', dados)
 
 
@@ -180,6 +200,29 @@ def verificarPermissoesRedePentest(rede_vpn,request):
 
         return HttpResponse("VOCÊ NÃO TEM PERMISSÃO PRA ISSO")
 
+
+def domainIp(address):
+    import shlex, subprocess, ipaddress
+
+    command = "dig +short {}".format(address)
+    args = shlex.split(command)
+    print(args)
+    a = subprocess.Popen(args, stdout=subprocess.PIPE)
+
+    returnCode = a.communicate()[0]
+    rc = a.returncode
+    for ip in returnCode.decode("utf-8").split('\n'):
+        print(f'ip: {ip}')
+        try:
+            ip_string = ipaddress.ip_address(ip)
+        except:
+            pass
+
+    print(rc)
+    print(ip_string)
+    return ip_string
+
+
 @login_required(login_url='/login/')
 def scanOpcoes(request):
     ip = request.POST.get('ip')
@@ -245,6 +288,7 @@ def scanOpcoes(request):
 
     OS = " -O"
     dataAgora = dataAtual().replace(' ','')
+    ipstring = ""
     ipstring = ip
     print(ip)
     ip = ip + "/" + str(rede)
@@ -253,16 +297,27 @@ def scanOpcoes(request):
     ip = ip.replace('\t', '')
     print(rede)
     print(ip)
+    dominio = ""
     try:
         ip3 = ipaddress.ip_network(ipstring)
 
     except:
-        return HttpResponse("IP ERRADO2" + str(ip))
+        dominio = ipstring
+        ipstring = domainIp(ipstring)
+        ip = ipstring
+        try:
+            ip_string = ipaddress.ip_address(ip)
+        except:
+            return HttpResponse(f'IPERRADO{ip}')
     print(ip)
 
     #res = subprocess.check_output("", shell=True)
     print("aqui?")
-    comando = "sudo nmap -D RND:20 "+str(versao)+ " " + str(tipo)+  " " +str(so) + " " +str(pn) + " -p" + str(porta_vai) + " " + str(ip) + " "+ str(vuln ) + " -oX arquivos/nmap/'" + str(dataAgora) + str(request.user) + "'.xml &"
+    if dominio != "":
+        comando = "sudo nmap -D RND:20 "+str(versao)+ " " + str(tipo)+  " " +str(so) + " " +str(pn) + " -p" + str(porta_vai) + " " + str(dominio) + " "+ str(vuln ) + " -oX arquivos/nmap/'" + str(dataAgora) + str(request.user) + "'.xml &"
+    else:
+        comando = "sudo nmap -D RND:20 "+str(versao)+ " " + str(tipo)+  " " +str(so) + " " +str(pn) + " -p" + str(porta_vai) + " " + str(ip) + " "+ str(vuln ) + " -oX arquivos/nmap/'" + str(dataAgora) + str(request.user) + "'.xml &"
+
     print("chegou aqui?")
     os.system(comando)
 
@@ -270,7 +325,6 @@ def scanOpcoes(request):
     usuario  = User.objects.get(id=request.user.id)
     vpn = Rede.objects.get(id=rede_vpn)
     ip = verificarSeExisteSeNaoCriar(ipstring,usuario,vpn)
-    dataAgora = dataAtual().replace(' ','')
 
     Scan.objects.create(ip = ip,
                         dataAgora = dataAgora,
@@ -290,20 +344,20 @@ def xmlBancoVerificar():
 
 
 
+
 def verificarArquivoXml(dataAgora,usuario):
     try:
         res = subprocess.check_output("cat arquivos/nmap/" + str(dataAgora) + str(usuario) + ".xml", shell=True)
     except:
         print("alo")
     #print(res)
-    try:
-        lerArquivoXml(dataAgora,usuario,"")
-        scan = Scan.objects.get(dataAgora = dataAgora,
+
+    lerArquivoXml(dataAgora,usuario,"")
+    scan = Scan.objects.get(dataAgora = dataAgora,
                                         usuario = User.objects.get(username= usuario))
-        scan.feito = 1
-        scan.save()
-    except:
-        pass
+    scan.feito = 1
+    scan.save()
+
 
     lerArquivoXml(dataAgora, usuario,"")
     scan = Scan.objects.get(dataAgora=dataAgora,
@@ -607,8 +661,13 @@ def lerArquivoXml(dataAgora,usuario,arquivo):
             cve_ajeitar.descricao = cve.descricao
             cve_ajeitar.save()
         except:
-            CVE_IP.objects.create(ip=IP.objects.get(ip=str(cve.ip), rede=rede_vpn),
-                                  cve=cve2,descricao=cve.descricao)
+            try:
+                cve_ip_Ver = str(cve.ip)
+                CVE_IP.objects.create(ip=IP.objects.get(ip=str(cve.ip), rede=rede_vpn),
+                                      cve=cve2,descricao=cve.descricao)
+            except:
+                #endereço fisico
+                pass
     for sistemas in sistemas_operacionais_vetor:
         try:
             so2 = SistemaOperacional.objects.get(nome=sistemas.nome)
@@ -813,7 +872,7 @@ def verificarArquivoFfuf(dataAgora, usuario):
 
 
 
-
+                    print(f'path {path_filtrar}')
                     diretorio = verificarSeExisteDiretorioSeNaoCriar(ip, porta, path_filtrar, httpcode, path)
                     alterarDiretoriosHttpCode(ip, porta, path_filtrar, httpcode, diretorio, path)
 
@@ -994,10 +1053,19 @@ def dirbOpcoes(request):
     ip = ip.replace('\t', '')
     print(rede)
     print(ip)
+    dominio = ""
     try:
         ip3 = ipaddress.ip_network(ipstring)
+
     except:
-        return HttpResponse("IP ERRADO2" + str(ip))
+        dominio = ipstring
+
+        ipstring = domainIp(ipstring)
+        ip = ipstring
+        try:
+            ip_string = ipaddress.ip_address(ip)
+        except:
+            return HttpResponse(f'IPERRADO{ip}')
     print("alo")
     print(ip)
     #res = subprocess.check_output("", shell=True)
@@ -1012,7 +1080,12 @@ def dirbOpcoes(request):
 
         for portinha in porta_vai:
             dataAgora = dataAtual().replace(' ', '')
-            comando = f'ffuf  -c -w {wordlist} -u {https_vai}{ipinho}:{portinha}{path_vai}FUZZ   ' + ' -o  arquivos/ffuf/' + str(dataAgora) + str(request.user) + f'.txt -of csv  {extencao_vai} &'
+            if dominio != "":
+                comando = f'ffuf  -c -w {wordlist} -u {https_vai}{dominio}:{portinha}{path_vai}FUZZ   ' + ' -o  arquivos/ffuf/' + str(dataAgora) + str(request.user) + f'.txt -of csv  {extencao_vai} &'
+            else:
+                comando = f'ffuf  -c -w {wordlist} -u {https_vai}{ipinho}:{portinha}{path_vai}FUZZ   ' + ' -o  arquivos/ffuf/' + str(
+                    dataAgora) + str(request.user) + f'.txt -of csv  {extencao_vai} &'
+
             print(comando)
             print(dataAgora)
             #os.system(comando)
@@ -2036,6 +2109,10 @@ def assunto(request,id):
         critica_2 = []
         portas_vulneraveis = 0
         portas_total = 0
+        baixa = 0
+        intermediaria = 0
+        alta = 0
+        critica = 0
         for ip_vai in ips:
 
                 baixa, intermediaria, alta, critica, portas_vuln = verificarQuantidadeVulnerabilidade("", request, "",
@@ -2225,6 +2302,7 @@ def lerArquivoXmlHistorico(dataAgora, usuario, arquivo):
             self.nome = title
             self.descricao = description
 
+
     class Vulnerabilidades2:
         def __init__(self, ip, porta, vuln_tipo, score, grau):
             self.ip = ip
@@ -2237,6 +2315,26 @@ def lerArquivoXmlHistorico(dataAgora, usuario, arquivo):
             self.recomendacao = ""
             self.tratada = 0
             self.grau = grau
+
+        def getIntegerTratar(self):
+                valor = float(str(self.CVSS).split(" ")[0])
+                resultado = ""
+                if float(valor) >= 7.5:
+                    resultado = "crítico"
+                if float(valor) < 7.5 and float(valor) >= 5:
+                    resultado = "alto"
+                if float(valor) < 5 and float(valor) >= 2.5:
+                    resultado = "intermediario"
+
+                if float(valor) < 2.5:
+                    resultado = "baixo"
+                return resultado
+
+        def getIntegerTratarString(self):
+            try:
+                return  float(str(self.CVSS).split(" ")[0])
+            except:
+                return self.CVSS
 
     class Sistema_Operacional_representar:
 
