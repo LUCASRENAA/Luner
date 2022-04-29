@@ -37,6 +37,10 @@ class Hostname(models.Model):
 class Hostname_IP(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     hostname = models.ForeignKey(Hostname, models.CASCADE)
+
+    class exibir(models.IntegerChoices):
+        Exibir = 1
+    exibir = models.IntegerField(default=0)
 class Scan(models.Model):
     ip = models.ForeignKey(IP, models.CASCADE)
     dataAgora = models.CharField(max_length=50)
@@ -44,7 +48,16 @@ class Scan(models.Model):
     feito = models.IntegerField(default=0)
     comando = models.CharField(max_length=200)
 
+    def Data_Formato(self):
+        try:
+            vai = self.dataAgora.replace("-","/")[10:16]
+            if ":"  == self.dataAgora.replace("-", "/")[10:16][-1:]:
+                vai = self.dataAgora.replace("-","/")[10:15]
 
+
+            return (f'{self.dataAgora.replace("-","/")[0:10]} {vai}')
+        except:
+            return self.dataAgora
 
 
 class FfufComandos(models.Model):
@@ -112,8 +125,11 @@ class Porta(models.Model):
         }
         return lugares_envio.get(str(self.tipo), str(self.tipo))
 
+    data_evento = models.DateTimeField(auto_now=True)
 
-
+    def get_91days(self):
+        from datetime import timedelta
+        return self.data_evento + timedelta(days=91)
     descricao = models.CharField(max_length=50)
     def __str__(self):
         return (f'{self.ip.ip}:{self.porta} -{self.ip.rede}:{self.ativo}')

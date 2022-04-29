@@ -164,7 +164,7 @@ def inicio(request,rede):
         portas_quantidades = []
         for ips_quantidade in ips_ativos:
             portas_quantidades.append(
-                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1).exclude(status='closed'))))
+                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1).exclude(status='closed').exclude(status='filtered'))))
 
         rede_pentest = Pentest_Rede.objects.get(rede=rede_objeto)
         queryparameteres = QueryParameteres.objects.all()
@@ -173,6 +173,55 @@ def inicio(request,rede):
         dados = {'redepentest':rede_pentest, 'hostnames':hostnames,
                  'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
         return render(request,'inicio.html',dados)
+
+@login_required(login_url='/login/')
+def inicio_tabelas(request,rede):
+    usuario = User.objects.get(id=request.user.id)
+    if rede == "WQFQWFUQWHFQWHFQWHFIWIF":
+        try:
+            rede = Pentest_Rede.objects.filter(usuario=usuario)[0].rede.rede
+            print(rede)
+            return redirect('/inicio/'+rede)
+        except:
+            return HttpResponse("crie uma rede associada a esse usuário")
+    else:
+        rede = requests.utils.unquote(rede)
+        try:
+            rede_objeto = Rede.objects.get(rede=rede)
+        except:
+            return  HttpResponse("Rede não existe")
+        try:
+            rede = Pentest_Rede.objects.get(rede=rede_objeto,usuario=usuario)
+        except:
+            return HttpResponse("crie um pentest para essa rede")
+
+
+
+        ips_ativos = IP.objects.filter(rede =rede_objeto,ativo="up" )
+        ips_desligados = IP.objects.filter(ativo = "",rede = rede_objeto)
+        diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
+        print(diretorios)
+
+        redes = Pentest_Rede.objects.filter(usuario=usuario)
+        whatwebTotal =  WhatWebIP.objects.filter(ip__rede = rede_objeto)
+
+        class PortasQuantidades:
+            def __init__(self, ip, quantidade):
+                self.ip = ip
+                self.quantidade = quantidade
+
+        portas_quantidades = []
+        for ips_quantidade in ips_ativos:
+            portas_quantidades.append(
+                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1).exclude(status='closed').exclude(status='filtered'))))
+
+        rede_pentest = Pentest_Rede.objects.get(rede=rede_objeto)
+        queryparameteres = QueryParameteres.objects.all()
+
+        hostnames = Hostname_IP.objects.filter(ip__rede = rede_objeto)
+        dados = {'redepentest':rede_pentest, 'hostnames':hostnames,
+                 'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
+        return render(request,'inicio_tabelas.html',dados)
 
 
 @login_required(login_url='/login/')
@@ -622,7 +671,8 @@ def lerArquivoXml(dataAgora,usuario,arquivo):
                                      vulneravel=0,
                                      descricao="",
                                      tipo=0,
-                                     status=porta.status_porta
+                                     status=porta.status_porta,
+
                                      )
             except:
 
@@ -634,7 +684,8 @@ def lerArquivoXml(dataAgora,usuario,arquivo):
                                      vulneravel=0,
                                      descricao="",
                                      tipo=0,ativo = 0,
-                                     status=porta.status_porta
+                                     status=porta.status_porta,
+
                                      )
     for vuln in vulnerabilidades_vetor:
         ipObjeto = IP.objects.get(ip=str(vuln.ip), rede=rede_vpn, usuario=User.objects.get(username=usuario))
@@ -2174,7 +2225,7 @@ def assunto_ip(request,id,ip):
 
         rede_objeto = pentest_objeto.rede
         ip_vai = IP.objects.get(ip=ip,rede=rede_objeto)
-        portas_vai = Porta.objects.filter(ip=ip_vai,ativo=1)
+        portas_vai = Porta.objects.filter(ip=ip_vai,ativo=1).exclude(status='closed').exclude(status='filtered')
 
         ips = IP.objects.filter(ativo="up", rede=rede_objeto)
 

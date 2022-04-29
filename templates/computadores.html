@@ -42,6 +42,20 @@
             </script>
             {% endif %}
 
+
+             {% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+                        {% if hostname.exibir == 1 %}
+
+            <script>
+                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ hostname.hostname }}";
+            </script>
+            {% endif %}
+
+            {% endif %}
+        {% endfor %}
+
+
         {% endfor %}
 </button>
 

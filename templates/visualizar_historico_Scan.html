@@ -7,6 +7,8 @@
       <th scope="col">Ip</th>
               <th scope="col">Rede</th>
               <th scope="col">Feito</th>
+                      <th scope="col">Data(Ano/Mes/Dia)</th>
+
 
     </tr>
   </thead>
@@ -21,7 +23,11 @@
             <td>{{ scan.ip.ip }}</td>
                                 <td>{{ scan.ip.rede.rede }}</td>
 
-            <td>{{ scan.feito }}</td>
+            <td>{% if  scan.feito  == 1 %} Concluído {% endif %}
+
+            {% if  scan.feito  != 1 %} Terminando {% endif %}</td>
+                                <td>{{ scan.Data_Formato }}</td>
+
 
                        </tr>
 

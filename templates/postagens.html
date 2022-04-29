@@ -168,22 +168,80 @@
         <div class="alert alert-dark" role="alert">
     <h2  style="color: #000000;">IP: {{  ip.ip }} ({{ sistema_operacional.sistema.nome }} {{ sistema_operacional.probabilidade }}%)</h2>
     </div>
-              <div class="row">
 
-            {% for porta in portas %}
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+        <th scope="col">IP</th>
 
-              <div class="col">
-            Porta: {{ porta.porta }} {{ porta.status }}
-    </div>
+      <th scope="col">Porta</th>
+      <th scope="col">Serviço</th>
+      <th scope="col">Produto</th>
+            <th scope="col">Versão</th>
+            <th scope="col">Status</th>
+            <th scope="col">Data</th>
+            <th scope="col">Hostname</th>
 
-                   {% if forloop.counter|divisibleby:3 %}
-                                    </div>
 
-              <div class="row">
 
-                  {% endif%}
-            {% endfor %}
-                  </div>
+    </tr>
+  </thead>
+  <tbody class="myTable">
+
+
+  {% for porta in portas %}
+
+                          {% if "" != porta.ativo %}
+<tr>
+      <td>{{ ip.ip }}</td>
+
+
+
+                <td>{{ porta.porta }}</td>
+                                <td>{{ porta.servico }}</td>
+              <td>{{ porta.produto }}</td>
+              <td>{{ porta.versao }}</td>
+              <td>{{ porta.status }}</td>
+
+              <td>{{ porta.data_evento }}</td>
+
+      <td id="botao_ip_porta_id_{{ porta.id }}"></td>
+
+       <script>
+                document.getElementById("botao_ip_porta_id_{{ porta.id }}").innerHTML="Sem Hostname";
+            </script>
+
+
+
+     {% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+            <script>
+                document.getElementById("botao_ip_porta_id_{{ porta.id }}").innerHTML="{{ hostname.hostname }}";
+            </script>
+            {% endif %}
+
+        {% endfor %}
+
+     {% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+                        {% if hostname.exibir == 1 %}
+
+            <script>
+                document.getElementById("botao_ip_porta_id_{{ porta.id }}").innerHTML="{{ hostname.hostname }}";
+            </script>
+            {% endif %}
+
+            {% endif %}
+        {% endfor %}
+          {% endif %}
+
+        </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+
+
 
 
 {% if  portas|length == 0 %}
@@ -211,6 +269,7 @@
               <th scope="col">CVSS</th>
               <th scope="col">Recomendação</th>
               <th scope="col">Corrigida</th>
+              <th scope="col">Data Alvo</th>
 
     </tr>
   </thead>
@@ -231,6 +290,7 @@
                         <th scope="row">{{ vulnerabilidade.impacto }} </th>
                                       <th scope="row">{{ vulnerabilidade.CVSS }} </th>
                                     <th scope="row">{{ vulnerabilidade.recomendacao }} </th>
+
             {% if vulnerabilidade.tratada == 0 %}
             <th scope="row">Vulnerabilidade ainda não foi tratada</th>
             {% endif %}
@@ -241,6 +301,7 @@
                     {% if vulnerabilidade.tratada == 2 %}
               <th scope="row">Vulnerabilidade resolvida</th>
             {% endif %}
+                                            <th scope="row">{{ vulnerabilidade.porta.get_91days }} </th>
 
     </tr>
 
