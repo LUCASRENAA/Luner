@@ -9,5 +9,5 @@ arquivos/whatweb/*
 arquivos/publico/*
 arquivos/sqlmap/*
 log
-static/pentests/
-static/graficos/
+static/pentests/*
+static/graficos/*
