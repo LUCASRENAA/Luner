@@ -5,6 +5,7 @@
     <tr>
         <th scope="col">Diretorio</th>
                 <th scope="col">Parametros</th>
+                <th scope="col">Status</th>
 
         <th scope="col">Whatweb</th>
 
@@ -42,6 +43,7 @@
           {% endif %}
           {% endfor %}</td>
 
+        <td>   {{ diretorio.http_code }}</td>
 
           <td><a  href="/whatweb/{{ diretorio.id }}">whatweb</a></td>
 

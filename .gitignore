@@ -6,7 +6,7 @@ arquivos/ffuf/
 arquivos/nmap/
 arquivos/theHarvester/
 arquivos/whatweb/
-arquivos/publico/
+arquivos/publico/*
 arquivos/sqlmap/
 log
 static/pentests/
