@@ -1984,7 +1984,12 @@ def handle_xml_upload(request):
     rede_vpn = request.POST.get('rede_vpn')
     comando = request.POST.get('comando')
 
-    ip = IP.objects.filter(rede = Rede.objects.get(id=rede_vpn))[0]
+    usuario  = User.objects.get(id=request.user.id)
+
+    try:
+        ip = IP.objects.filter(rede = Rede.objects.get(id=rede_vpn))[0]
+    except:
+        ip = verificarSeExisteSeNaoCriar('127.0.0.1',usuario, Rede.objects.get(id=rede_vpn))
     dataAgora = dataAtual().replace(' ', '')
 
     Scan.objects.create(ip=ip,
@@ -1996,12 +2001,17 @@ def handle_xml_upload(request):
     usuario = request.user
     lerArquivoXml(dataAgora,usuario,xmlfile)
 
-    filename =str(xmlfile)
+    filename = str(xmlfile)
     with open(filename, 'wb+') as f:
         for chunk in xmlfile.chunks():
             f.write(chunk)
-    os.system(f'mv {filename} arquivos/nmap/"{dataAgora}{request.user}".xml')
-    return HttpResponse(xmlfile)
+    print(f'movendo "{filename}" arquivos/nmap/"{dataAgora}{request.user}".xml')
+    os.system(f'mv "{filename}" arquivos/nmap/"{dataAgora}{request.user}".xml')
+
+    lerArquivoXml(dataAgora,usuario,"")
+
+
+    return redirect(f'/inicio/{Rede.objects.get(id=rede_vpn).rede}')
 
 @login_required(login_url='/login/')
 def parserSite(request,id):

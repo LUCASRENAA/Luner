@@ -1,3 +1,24 @@
+<script>
+
+      function limpar(ip) {
+  let alvo = document.getElementById(ip);
+
+  if (alvo.classList.contains('indefinido') === true){
+    alvo.innerText = "";
+    console.log("apaguei");
+        console.log(ip);
+
+}
+
+
+}
+
+
+
+  </script>
+
+
+
 
 {% for ip in ips %}
 
@@ -97,6 +118,7 @@
   </tbody>
 </table>
     {% if  vulns|length != 0 %}
+<div id="elemento2{{ ip.ip }}" class="indefinido">
 
 <table class="table">
   <thead class="thead-dark">
@@ -151,8 +173,9 @@
             {% endfor %}
               </tbody>
 </table>
+</div>
                       {% endif%}
-
+<div id="elemento{{ ip.ip }}" class="indefinido">
 <table class="table">
   <thead class="thead-dark">
     <tr>
@@ -167,6 +190,11 @@
 {% for cve in cves %}
 
 {% if ip.ip == cve.ip %}
+<script>
+  let alvo2 = document.getElementById("elemento{{ ip.ip }}");
+    alvo2.setAttribute("class", "aloou");
+
+</script>
 <tr>
         <th scope="row">{{ cve.cve }} </th>
         <th scope="row">{{ cve.descricao }} </th>
@@ -174,9 +202,16 @@
 </tr>
 {% endif %}
 {% endfor %}
+
+
+  <script>
+         limpar("elemento{{ ip.ip }}");
+                  limpar("elemento2{{ ip.ip }}");
+
+  </script>
        </tbody>
 </table>
-
+</div>
 
 
 {% endfor %}
