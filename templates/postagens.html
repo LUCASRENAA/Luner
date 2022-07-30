@@ -1,0 +1,440 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+
+
+
+
+ {% include "cabeca.html" %}
+
+
+
+
+
+
+
+
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+</head>
+<style >
+
+    body {
+  font-size: .875rem;
+}
+
+.feather {
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
+}
+
+/*
+ * Sidebar
+ */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100; /* Behind the navbar */
+  padding: 0;
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 48px; /* Height of navbar */
+  height: calc(100vh - 48px);
+  padding-top: .5rem;
+  overflow-x: hidden;
+  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+.sidebar .nav-link {
+  font-weight: 500;
+  color: #333;
+}
+
+.sidebar .nav-link .feather {
+  margin-right: 4px;
+  color: #999;
+}
+
+.sidebar .nav-link.active {
+  color: #007bff;
+}
+
+.sidebar .nav-link:hover .feather,
+.sidebar .nav-link.active .feather {
+  color: inherit;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+  text-transform: uppercase;
+}
+
+/*
+ * Navbar
+ */
+
+.navbar-brand {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, .25);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .form-control {
+  padding: .75rem 1rem;
+  border-width: 0;
+  border-radius: 0;
+}
+
+.form-control-dark {
+  color: #fff;
+  background-color: rgba(255, 255, 255, .1);
+  border-color: rgba(255, 255, 255, .1);
+}
+
+.form-control-dark:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+}
+
+/*
+ * Utilities
+ */
+
+.border-top { border-top: 1px solid #e5e5e5; }
+.border-bottom { border-bottom: 1px solid #e5e5e5; }
+</style>
+  <body>
+
+
+    <div class="container-fluid">
+      <div class="row">
+
+
+<div class="container">
+                                 <div class="container-fluid quem-somos text-center margin">
+
+       <h2>Quantidade de vulnerabilidades encontradas no sistema <p>IP: {{  ip.ip }}</p></h2>
+                                 </div>
+<p></p>
+
+
+                  <div class="row">
+
+  <div class="col" align="center">{{ baixa }}
+      <p>
+
+      <button type="button" class="btn btn-secondary">Baixas</button>
+</p>
+  </div>
+  <div class="col" align="center">{{ intermediaria }}
+      <p>
+      <button type="button" class="btn btn-primary">Intermediarias</button>
+</p>
+  </div>
+  <div class="col" align="center">{{ alta }}
+      <p>
+      <button type="button" class="btn btn-warning">Altas</button>
+</p>
+  </div>
+  <div class="col" align="center">{{ critica }}
+      <p>
+      <button type="button" class="btn btn-danger">Críticas</button>
+</p>
+  </div>
+</div>                            <div class="container-fluid quem-somos text-center margin">
+              <div class="row">
+              <div class="col">
+
+<img src="/static/graficos/{{ hash_veio }}.png" width="100%">
+                  </div>              <div class="col">
+
+    <img src="/static/graficos/{{ hash_veio2 }}.png" width="100%">
+                  </div>
+</div>
+        <div class="alert alert-dark" role="alert">
+    <h2  style="color: #000000;">IP: {{  ip.ip }} ({{ sistema_operacional.sistema.nome }} {{ sistema_operacional.probabilidade }}%)</h2>
+    </div>
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+        <th scope="col">IP</th>
+
+      <th scope="col">Porta</th>
+      <th scope="col">Serviço</th>
+      <th scope="col">Produto</th>
+            <th scope="col">Versão</th>
+            <th scope="col">Status</th>
+            <th scope="col">Data</th>
+            <th scope="col">Hostname</th>
+
+
+
+    </tr>
+  </thead>
+  <tbody class="myTable">
+
+
+  {% for porta in portas %}
+
+                          {% if "" != porta.ativo %}
+<tr>
+      <td>{{ ip.ip }}</td>
+
+
+
+                <td>{{ porta.porta }}</td>
+                                <td>{{ porta.servico }}</td>
+              <td>{{ porta.produto }}</td>
+              <td>{{ porta.versao }}</td>
+              <td>{{ porta.status }}</td>
+
+              <td>{{ porta.data_evento }}</td>
+
+      <td id="botao_ip_porta_id_{{ porta.id }}"></td>
+
+       <script>
+                document.getElementById("botao_ip_porta_id_{{ porta.id }}").innerHTML="Sem Hostname";
+            </script>
+
+
+
+     {% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+            <script>
+                document.getElementById("botao_ip_porta_id_{{ porta.id }}").innerHTML="{{ hostname.hostname }}";
+            </script>
+            {% endif %}
+
+        {% endfor %}
+
+     {% for hostname in hostnames %}
+            {% if hostname.ip.ip == ip.ip %}
+                        {% if hostname.exibir == 1 %}
+
+            <script>
+                document.getElementById("botao_ip_porta_id_{{ porta.id }}").innerHTML="{{ hostname.hostname }}";
+            </script>
+            {% endif %}
+
+            {% endif %}
+        {% endfor %}
+          {% endif %}
+
+        </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+
+
+
+
+{% if  portas|length == 0 %}
+                  <p>Opa, parece que o ip não tem portas abertas...</p>
+                  {% endif%}
+              <div class="alert alert-dark" role="alert">
+
+                        <h2  style="color: #000000;">Vulnerabilidades</h2>
+    </div>
+{% if  vulnerabilidades|length == 0 %}
+                  <p>Opa, parece que o ip não tem nenhuma vulnerabilidade catalogada no sistema...</p>
+                  {% endif%}
+
+    {% if  vulnerabilidades|length != 0 %}
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Tipo</th>
+      <th scope="col">Descrição</th>
+      <th scope="col">Porta</th>
+      <th scope="col">Path</th>
+              <th scope="col">Parametro</th>
+              <th scope="col">Impacto</th>
+              <th scope="col">CVSS</th>
+              <th scope="col">Recomendação</th>
+              <th scope="col">Corrigida</th>
+              <th scope="col">Data Alvo</th>
+              <th scope="col">Usuário que encontrou</th>
+
+    </tr>
+  </thead>
+  <tbody>
+            {% for vulnerabilidade in vulnerabilidades %}
+
+
+
+
+
+    <tr>
+      <th scope="row">{{ vulnerabilidade.tipo.nome }}</th>
+
+        <th scope="row">{{ vulnerabilidade.tipo.descricao }} </th>
+                       <th scope="row">{{ vulnerabilidade.porta.porta }}</th>
+                          <th scope="row">{{ vulnerabilidade.path }} </th>
+                          <th scope="row">{{ vulnerabilidade.parametro }}</th>
+                        <th scope="row">{{ vulnerabilidade.impacto }} </th>
+                                      <th scope="row">{{ vulnerabilidade.CVSS }} </th>
+                                    <th scope="row">{{ vulnerabilidade.recomendacao }} </th>
+
+            {% if vulnerabilidade.tratada == 0 %}
+            <th scope="row">Vulnerabilidade ainda não foi tratada</th>
+            {% endif %}
+                               {% if vulnerabilidade.tratada == 1 %}
+           <th scope="row">Vulnerabilidade em correção</th>
+            {% endif %}
+
+                    {% if vulnerabilidade.tratada == 2 %}
+              <th scope="row">Vulnerabilidade resolvida</th>
+            {% endif %}
+                                            <th scope="row">{{ vulnerabilidade.porta.get_91days }} </th>
+                                    <th scope="row">{{ vulnerabilidade.usuario }} </th>
+
+    </tr>
+
+
+
+
+            {% endfor %}
+              </tbody>
+</table>
+                      {% endif%}
+
+                <div class="alert alert-dark" role="alert">
+
+                        <h2  style="color: #000000;">Identificador de vulnerabilidades</h2>
+    </div>
+
+    {% if  cve_ip|length == 0 %}
+                  <p>Opa, parece que o ip não tem nenhuma vulnerabilidade identificada pelo nmap no sistema...</p>
+
+    {% endif %}
+    {% if  cve_ip|length != 0 %}
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Identificador</th>
+      <th scope="col">Descrição</th>
+      <th scope="col">Vulneravel</th>
+
+
+    </tr>
+  </thead>
+  <tbody>
+            {% for cve in cve_ip %}
+
+
+    <tr>
+      <th scope="row">{{ cve.cve.cve }}</th>
+             <th scope="row">{{ cve.descricao }}</th>
+
+            {% if  cve.vulneravel == 0 %}
+
+      <th scope="row">Ainda não foi testado</th>
+
+            {% endif %}
+
+                  {% if  cve.vulneravel == 1 %}
+
+      <th scope="row">Vulneravel</th>
+
+            {% endif %}
+                  {% if  cve.vulneravel == 2 %}
+
+      <th scope="row">Não vulneravel</th>
+            {% endif %}
+
+    </tr>
+            {% endfor %}
+ </tbody>
+</table>
+                          {% endif%}
+
+</div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="../../assets/js/vendor/popper.min.js"></script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+
+    <!-- Graphs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script>
+      var ctx = document.getElementById("myChart");
+      var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          datasets: [{
+            data: [15339, 21345, 18483, 24003, 23489, 24092, 12034],
+            lineTension: 0,
+            backgroundColor: 'transparent',
+            borderColor: '#007bff',
+            borderWidth: 4,
+            pointBackgroundColor: '#007bff'
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: false
+              }
+            }]
+          },
+          legend: {
+            display: false,
+          }
+        }
+      });
+    </script>
+
+
+  <script>
+    function Mostrar(id) {
+      var div = document.getElementById(id);
+
+        div.style.display = "block";
+    }
+
+  </script>
+
+      <script>
+    function Esconder(id) {
+      var div = document.getElementById(id);
+
+        div.style.display = "none";
+    }
+
+  </script>
+</div>
+      </div>
+    </div>
+
+  </body>
+</html>

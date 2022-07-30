@@ -1,0 +1,36 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Id</th>
+      <th scope="col">Scan</th>
+      <th scope="col">Comando</th>
+      <th scope="col">Ip</th>
+              <th scope="col">Rede</th>
+              <th scope="col">Feito</th>
+                      <th scope="col">Data(Ano/Mes/Dia)</th>
+
+
+    </tr>
+  </thead>
+  <tbody>
+
+            {% for scan in scans %}
+                <tr>
+            <td><a href="/scan/{{ scan.id }}">{{ scan.id}}</a></td>
+
+            <td>{{ scan}}</td>
+            <td>{{ scan.comando }}</td>
+            <td>{{ scan.ip.ip }}</td>
+                                <td>{{ scan.ip.rede.rede }}</td>
+
+            <td>{% if  scan.feito  == 1 %} Concluído {% endif %}
+
+            {% if  scan.feito  != 1 %} Terminando {% endif %}</td>
+                                <td>{{ scan.Data_Formato }}</td>
+
+
+                       </tr>
+
+            {% endfor %}
+  </tbody>
+</table>

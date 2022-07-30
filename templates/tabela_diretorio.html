@@ -1,0 +1,73 @@
+
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+        <th scope="col">Diretorio</th>
+                <th scope="col">Parametros</th>
+                <th scope="col">Status</th>
+
+        <th scope="col">Whatweb</th>
+
+        <th scope="col">ParserSite</th>
+        <th scope="col">SqlMap</th>
+
+
+
+    </tr>
+  </thead>
+  <tbody class="myTable">
+{% for ip in ips %}
+
+    {% for diretorio in diretorios %}
+        {% if diretorio.ip == ip %}
+<tr>
+
+        <td>   {{ diretorio }}</td>
+<td>?{% for query in queryparameteres %}
+            {% if query.diretorio.id ==  diretorio.id %}
+          {% if query.vulneravel == 1 %}
+
+
+          <button onclick="alert('vulneravel a sql injection')">{{ query.parametro }}</button>={{ query.valor }}&
+
+          {% endif %}
+
+                    {% if query.vulneravel != 1 %}
+                    {{ query.parametro }}={{ query.valor }}&
+
+          {% endif %}
+
+
+
+          {% endif %}
+          {% endfor %}</td>
+
+        <td>   {{ diretorio.http_code }}</td>
+
+          <td><a  href="/whatweb/{{ diretorio.id }}">whatweb</a></td>
+
+
+          <td><a href="/sqlmap/{{ diretorio.id }}">sqlmap<a/></td>
+          <td><a href="/parserSite/{{ diretorio.id }}">parserSite</a></td>
+        </tr>
+
+        {% endif %}
+                    {% endfor %}
+{% endfor %}
+  </tbody>
+</table>
+
+
+
+
+<script>
+$(document).ready(function(){
+  $("#myInput").on("keyup", function() {
+    var value = $(this).val().toLowerCase();
+    $("#myTable tr").filter(function() {
+      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    });
+  });
+});
+</script>

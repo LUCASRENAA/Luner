@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+
+<link rel="style" type="text/css" href="/static/css/style.css">
+
+                    <input name="senha" value="{{ senha }}" id="senha" hidden>
+<script  src="https://code.jquery.com/jquery-3.1.1.min.js">
+
+</script>
+
+
+
+ {% include "cabeca.html" %}
+
+
+
+
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+
+
+   <style>
+      #centro
+      {
+      position: absolute;
+	left: 42%;
+	top: 20%
+      }
+
+      body{
+        background: #000000;
+      }
+
+    </style>
+
+<script  src="https://code.jquery.com/jquery-3.1.1.min.js">
+</script>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+</head>
+<body>
+
+ {% include "padrao_inicio.html" %}
+
+
+
+
+
+
+
+
+ <!-- Button trigger modal -->
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Coloque arquivos no servidor ou salve senhas</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <blockquote class="blockquote mb-0">
+<form action="/upload/" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <blockquote class="blockquote mb-0">
+<label>Subir arquivo</label>
+        <input name="file" type="file" class="form-control">
+
+        <p></p>
+
+        <input name="senha" value="{{ senha }}" hidden>
+
+      <footer class="blockquote-footer"></footer>
+    </blockquote>
+        <input type="submit"  class="btn btn-primary form-control" value="Subir arquivo">
+
+          </form>
+<hr>
+ <form action="/criptografar_texto/" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+
+<h2>Subir senha criptografada</h2><p></p>
+                    <input name="senha" value="{{ senha }}" hidden>
+                        <label>Titulo</label>      <p></p>      <input name="titulo" class="form-control">
+              <p></p>
+                 <label>Nome</label><p></p>     <input name="nome" class="form-control"> <p></p>
+                    <label>Senha</label> <p></p>     <input type="password" name="senha_texto" class="form-control"> <p></p>
+                     <label>URI</label> <p></p>     <input name="uri" class="form-control"><p></p>
+
+<button class="btn btn-primary form-control" type="/criptografar_texto/">Enviar Texto</button>
+                    </form>
+
+        <hr>
+
+
+      <footer class="blockquote-footer"></footer>
+    </blockquote>
+      </div>
+      <div class="modal-footer">
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="centro">
+</div>
+
+
+
+<div class="container">
+
+
+    <div class="card">
+  <div class="card-header">
+Faça o donwload</div>
+  <div class="card-body">
+      <img src="/static/img/donwload.jpg" width="50px" height="50px" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+
+      Coloque arquivos no servidor
+      <hr>
+</img>
+    <blockquote class="blockquote mb-0">
+
+        <h2>Clique para baixar seus arquivos</h2>
+        <hr>
+        <img src="/static/img/pasta.jpg" width="50px" height="50px" onclick="aparecer_pastas()"> <i id="ver_pasta">Ver pastas</i>
+        <div id="arquivos" >
+{% for arquivo in cofre %}
+        <p></p>
+               <form action="/baixar/{{ arquivo.id }}" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+
+
+                    <input name="senha" value="{{ senha }}" hidden>
+                    <input name="id" value="{{ arquivo.id }}" hidden>
+<button type="/baixar/{{ arquivo.id }}"><img src="/static/img/upload.jpg" width="50px" height="50px"></button>
+        {{ arquivo.nome }}
+                    </form>
+
+
+
+        {% endfor %}
+</div>
+        <script>
+             function aparecer_pastas() {
+      var x = document.getElementById("arquivos");
+ var ver = document.getElementById("ver_pasta");
+    if (x.style.display === "none")
+    {
+        x.style.display = "block";
+        ver.innerHTML = "Esconder pastas"
+}
+else
+{
+        x.style.display = "none";
+        ver.innerHTML = "Ver pastas"
+
+}
+
+
+
+    }
+
+
+
+    window.onload = initPage;
+
+function initPage(){
+  var y = document.getElementById("arquivos");
+y.style.display = "none";
+}
+    </script>
+        </script>
+
+<hr>
+<p></p>
+
+        <h2>Veja suas senhas salvas</h2>
+        <hr>
+        <p></p>
+        {%  for senhas_cofr in senhas_cofre %}
+
+        <script>
+
+ function pegar_titulo{{ senhas_cofr.id }}() {
+    var senha = $("#senha").val();
+    var titulo = $("#token{{ senhas_cofr.id }}").val();
+
+
+
+    var request = $.ajax({
+      url: "/descriptografar_texto/",
+      type: "POST",
+      data: {key : senha, texto : titulo, csrfmiddlewaretoken: '{{ csrf_token }}' },
+    });
+
+    request.done(function(msg) {
+      $("#log{{ senhas_cofr.id }}").html( msg );
+            $("#log_titulo{{ senhas_cofr.id }}").html( msg );
+
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+      alert( "Request failed: " + textStatus );
+    });
+}
+
+
+ function pegar_nome{{ senhas_cofr.id }}() {
+    var senha = $("#senha").val();
+    var titulo = $("#tokennome{{ senhas_cofr.id }}").val();
+
+
+
+    var request = $.ajax({
+      url: "/descriptografar_texto/",
+      type: "POST",
+      data: {key : senha, texto : titulo, csrfmiddlewaretoken: '{{ csrf_token }}' },
+    });
+
+    request.done(function(msg) {
+      $("#lognome{{ senhas_cofr.id }}").html( msg );
+            $("#nome_login{{ senhas_cofr.id }}").html( msg );
+
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+      alert( "Request failed: " + textStatus );
+    });
+}
+
+
+ function pegar_uri{{ senhas_cofr.id }}() {
+    var senha = $("#senha").val();
+    var titulo = $("#tokenuri{{ senhas_cofr.id }}").val();
+
+
+
+    var request = $.ajax({
+      url: "/descriptografar_texto/",
+      type: "POST",
+      data: {key : senha, texto : titulo, csrfmiddlewaretoken: '{{ csrf_token }}' },
+    });
+
+    request.done(function(msg) {
+      $("#loguri{{ senhas_cofr.id }}").html( msg );
+            $("#uri_cofre{{ senhas_cofr.id }}").html( msg );
+
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+      alert( "Request failed: " + textStatus );
+    });
+}
+
+
+
+ function pegar_senha{{ senhas_cofr.id }}() {
+    var senha = $("#senha").val();
+    var titulo = $("#tokensenha{{ senhas_cofr.id }}").val();
+
+
+
+    var request = $.ajax({
+      url: "/descriptografar_texto/",
+      type: "POST",
+      data: {key : senha, texto : titulo, csrfmiddlewaretoken: '{{ csrf_token }}' },
+    });
+
+    request.done(function(msg) {
+      $("#logsenha{{ senhas_cofr.id }}").val( msg );
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+      alert( "Request failed: " + textStatus );
+    });
+}
+
+        </script>
+
+
+
+            <form action="/descriptografar_texto/" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+
+
+
+                    </form>
+        <p> </p>
+
+
+        <input id="token{{ senhas_cofr.id }}" value="{{ senhas_cofr.titulo }}" hidden>
+                <input id="tokennome{{ senhas_cofr.id }}" value="{{ senhas_cofr.nome }}" hidden>
+        <input id="tokensenha{{ senhas_cofr.id }}" value="{{ senhas_cofr.senha }}" hidden>
+        <input id="tokenuri{{ senhas_cofr.id }}" value="{{ senhas_cofr.uri }}" hidden>
+
+
+<!-- Button trigger modal -->
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal2{{ senhas_cofr.id }}" tabindex="-1" aria-labelledby="exampleModalLabel2{{ senhas_cofr.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel2{{ senhas_cofr.id }}"> <label id="log_titulo{{ senhas_cofr.id }}"></label></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+                <label onclick="pegar_nome{{ senhas_cofr.id }}()">Nome: </label> <label id="lognome{{ senhas_cofr.id }}"></label><p></p>
+        <label onclick="pegar_senha{{ senhas_cofr.id }}()">Senha: </label>
+
+
+
+          <input id="logsenha{{ senhas_cofr.id }}" type="password">
+
+
+ <img src="/static/img/olho.png" width="50px" height="50px" id="olho{{ senhas_cofr.id }}"></img>
+          <p></p>
+
+          <button id="execCopy{{ senhas_cofr.id }}">Copiar Senha</button>
+
+<script>
+
+    document.getElementById('execCopy{{ senhas_cofr.id }}').addEventListener('click', execCopy{{ senhas_cofr.id }});
+function execCopy{{ senhas_cofr.id }}() {
+  document.querySelector("#logsenha{{ senhas_cofr.id }}").select();
+    $("#logsenha{{ senhas_cofr.id }}").attr("type", "text");
+  document.execCommand("copy");
+      $("#logsenha{{ senhas_cofr.id }}").attr("type", "password");
+
+}
+
+
+</script>
+ <script>
+     $( "#olho{{ senhas_cofr.id }}" ).mousedown(function() {
+  $("#logsenha{{ senhas_cofr.id }}").attr("type", "text");
+});
+
+$( "#olho{{ senhas_cofr.id }}" ).mouseup(function() {
+  $("#logsenha{{ senhas_cofr.id }}").attr("type", "password");
+});
+ </script>
+        <label onclick="pegar_uri{{ senhas_cofr.id }}()">URI: </label> <label id="loguri{{ senhas_cofr.id }}"></label><p></p>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+        <div class="container">
+  <div class="row align-items-start">
+    <div class="col">
+    </div>
+    <div class="col">
+        <label onclick="pegar_titulo{{ senhas_cofr.id }}()"> <button width="50px" height="50px" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal2{{ senhas_cofr.id }}">
+
+          <label id="nome_login{{ senhas_cofr.id }}"></label>
+
+</button></label>
+    </div>
+    <div class="col">
+    </div>
+
+
+  </div>
+
+
+  <div class="row align-items-start">
+    <div class="col">
+
+
+
+
+                    <label id="log{{ senhas_cofr.id }}"></label>
+
+</div>
+    <div class="col">
+    </div>
+    <div class="col">
+    </div>
+
+
+  </div>
+
+
+  <div class="row align-items-start">
+    <div class="col">
+    </div>
+    <div class="col">
+         <label id="uri_cofre{{ senhas_cofr.id }}"></label>
+    </div>
+    <div class="col">
+    </div>
+
+
+  </div>
+        </div>
+        <p></p>
+
+ <hr>
+
+        <script>
+            pegar_titulo{{ senhas_cofr.id }}();
+            pegar_nome{{ senhas_cofr.id }}();
+                        pegar_uri{{ senhas_cofr.id }}();
+                        pegar_senha{{ senhas_cofr.id }}();
+
+        </script>
+        {% endfor %}
+      <footer class="blockquote-footer"></footer>
+
+    </blockquote>
+  </div>
+
+</div>
+</div>
+ {{ key }}
+ {% include "padrao_fim.html" %}
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

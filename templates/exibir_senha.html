@@ -1,0 +1,68 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+
+<link rel="style" type="text/css" href="/static/css/style.css">
+
+
+
+ {% include "cabeca.html" %}
+
+
+
+
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+
+
+   <style>
+      #centro
+      {
+      position: absolute;
+	left: 42%;
+	top: 20%
+      }
+
+    </style>
+
+
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+</head>
+<body>
+
+ {% include "padrao_inicio.html" %}
+<div id="centro">
+<div class="container">
+
+
+    <div class="card">
+  <div class="card-header">
+Entre no seu cofre  </div>
+  <div class="card-body">
+ <input type="password" id="senha" value="{{ key }}">
+ <button id="olho">OLHO</button>  </div>
+Não se esqueça de copiar essa senha
+
+        <a href="/cofre">Volte para o cofre e digite a senha acima</a>
+</div>
+</div>
+</div>
+
+ <script>
+     $( "#olho" ).mousedown(function() {
+  $("#senha").attr("type", "text");
+});
+
+$( "#olho" ).mouseup(function() {
+  $("#senha").attr("type", "password");
+});
+ </script>
+ {% include "padrao_fim.html" %}
+
+
+</body>
+</html>

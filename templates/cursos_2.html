@@ -1,0 +1,47 @@
+   {% for assunto in assuntos %}
+
+
+    <script>
+    function chamar{{ assunto.id }}() {
+      var x = document.getElementById("assunto_ramo{{ assunto.id }}");
+      if (x.style.display === "none"){
+        x.style.display = "block";
+        }
+       else{
+               x.style.display = "none";
+}
+    }
+
+
+
+
+    </script>
+
+
+
+
+      <div  onclick="chamar{{ assunto.id }}()">
+
+   <img src="/media/{{ assunto.imagem }}" style="width: 30px;margin-left: 10px;"><span style="margin-left: 12px;font-family: Nunito, sans-serif;font-size: 18px;">   {{ assunto.dominio }}</span></li>
+
+      </div>
+
+   {% for assunto_ramo in assuntos_ramo_ramo %}
+      <div id="assunto_ramo{{ assunto.id }}" style="display:none;">
+            <a href="/dominio/{{ materia }}/{{ assunto.dominio }}"
+                                    style="padding-left: 5px;">{{ assunto.dominio }}</a>
+          <p></p>
+
+                    {% if assunto == assunto_ramo.assunto %}
+                       {% if assunto_ramo.pagina == 1 %}
+
+          ----------<a href="/dominio/{{ materia }}/{{ assunto.dominio }}/{{ assunto_ramo.titulo.titulo }}">{{ assunto_ramo.titulo.titulo }}</a>
+
+                    <p></p>
+                       {% endif %}
+                    {% endif %}
+    </div>
+                                                            {% endfor %}
+
+
+                    {% endfor %}

@@ -1,0 +1,219 @@
+<script>
+
+      function limpar(ip) {
+  let alvo = document.getElementById(ip);
+
+  if (alvo.classList.contains('indefinido') === true){
+    alvo.innerText = "";
+    console.log("apaguei");
+        console.log(ip);
+
+}
+
+
+}
+
+
+
+  </script>
+
+
+
+
+{% for ip in ips %}
+
+{% for hostname in hostnames  %}
+{% if ip.ip == hostname.ip %}
+
+<p>{{ hostname.ip }}</p>
+
+<p>{{ hostname.hostname }}</p>
+{% endif %}
+{% endfor %}
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">IP</th>
+      <th scope="col">Sistema operacional</th>
+      <th scope="col">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <td>{{ ip.ip }} </td>
+      <td><button type="button" id="botao_ip_id_{{ ip.id }}" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Ver os outros sistemas</button></td>
+      <td>{{ ip.status_ip }}</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<!-- Button trigger modal -->
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Outros possiveis sistemas ({{ ip.ip }})</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+{% for sistema in sistemas %}
+{% if ip.ip == sistema.ip %}
+
+ <script>
+            if ( document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML === "Ver os outros sistemas")
+                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ sistema.nome }}";
+            </script>
+
+<p>Sistema operacional: {{ sistema.nome }}</p>
+<p>Probabilidade: {{ sistema.probabilidade }}%</p>
+{% endif %}
+{% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Porta</th>
+      <th scope="col">Servico</th>
+      <th scope="col">Produto</th>
+              <th scope="col">Versão</th>
+      <th scope="col">Status</th>
+
+    </tr>
+  </thead>
+  <tbody>
+
+
+{% for porta in ip.portas %}
+
+    <tr>
+      <td>{{ porta.porta }} </td>
+      <td>{{ porta.servico }}</td>
+              <td>{{ porta.produto }}</td>
+      <td>{{ porta.versao }}</td>
+      <td>{{ porta.status_porta }}</td>
+
+    </tr>
+
+{% endfor %}
+
+  </tbody>
+</table>
+    {% if  vulns|length != 0 %}
+<div id="elemento2{{ ip.ip }}" class="indefinido">
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Identificador</th>
+      <th scope="col">Descrição</th>
+      <th scope="col">Porta</th>
+      <th scope="col">Path</th>
+              <th scope="col">Parametro</th>
+              <th scope="col">Impacto</th>
+              <th scope="col">CVSS</th>
+              <th scope="col">Recomendação</th>
+              <th scope="col">Corrigida</th>
+
+    </tr>
+  </thead>
+  <tbody>
+            {% for vulnerabilidade in vulns %}
+{% if ip.ip == vulnerabilidade.ip %}
+
+
+
+
+
+    <tr>
+      <th scope="row">{{ vulnerabilidade.tipo.nome }}</th>
+
+        <th scope="row">{{ vulnerabilidade.tipo.descricao }} </th>
+                       <th scope="row">{{ vulnerabilidade.porta }}</th>
+                          <th scope="row">{{ vulnerabilidade.path }} </th>
+                          <th scope="row">{{ vulnerabilidade.parametro }}</th>
+                        <th scope="row">{{ vulnerabilidade.impacto }} {{ vulnerabilidade.getIntegerTratar }} </th>
+                                      <th scope="row">{{ vulnerabilidade.CVSS }} </th>
+                                    <th scope="row">{{ vulnerabilidade.recomendacao }}  </th>
+            {% if vulnerabilidade.tratada == 0 %}
+            <th scope="row">Vulnerabilidade ainda não foi tratada</th>
+            {% endif %}
+                               {% if vulnerabilidade.tratada == 1 %}
+           <th scope="row">Vulnerabilidade em correção</th>
+            {% endif %}
+
+                    {% if vulnerabilidade.tratada == 2 %}
+              <th scope="row">Vulnerabilidade resolvida</th>
+            {% endif %}
+
+    </tr>
+
+
+
+            {% endif %}
+
+            {% endfor %}
+              </tbody>
+</table>
+</div>
+                      {% endif%}
+<div id="elemento{{ ip.ip }}" class="indefinido">
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Identificador</th>
+      <th scope="col">Descrição</th>
+
+
+    </tr>
+  </thead>
+  <tbody>
+
+{% for cve in cves %}
+
+{% if ip.ip == cve.ip %}
+<script>
+  let alvo2 = document.getElementById("elemento{{ ip.ip }}");
+    alvo2.setAttribute("class", "aloou");
+
+</script>
+<tr>
+        <th scope="row">{{ cve.cve }} </th>
+        <th scope="row">{{ cve.descricao }} </th>
+
+</tr>
+{% endif %}
+{% endfor %}
+
+
+  <script>
+         limpar("elemento{{ ip.ip }}");
+                  limpar("elemento2{{ ip.ip }}");
+
+  </script>
+       </tbody>
+</table>
+</div>
+
+
+{% endfor %}
+
+

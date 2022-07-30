@@ -1,0 +1,60 @@
+   {% for assunto in assuntos %}
+
+
+    <script>
+    function chamar{{ assunto.id }}() {
+      var x = document.getElementById("assunto_ramo{{ assunto.id }}");
+      if (x.style.display === "none"){
+        x.style.display = "block";
+        }
+       else{
+               x.style.display = "none";
+}
+    }
+
+
+
+
+    </script>
+   <div  onclick="chamar{{ assunto.id }}()">
+  <img src="/media/{{ assunto.pentest.imagem }}" style="width: 30px;margin-left: 10px;">  {{ assunto.pentest.nome }}<span style="margin-left: 12px;font-family: Nunito, sans-serif;font-size: 18px;color: #f3e5f5;"> </span>
+
+</div>
+
+
+
+
+   </li>
+   <div id="assunto_ramo{{ assunto.id }}" style="display:none;">
+
+         <a  href="/dominio/{{ assunto.id }}/{{ assunto.dominio }}"
+       >{{ assunto.dominio }}</a>
+       <p></p>
+                    {% for assunto_ramo in assuntos_ramo %}
+                    {% if assunto == assunto_ramo.assunto %}
+                    ----------<a href="dominio/{{ assunto.id }}/{{ assunto_ramo.dominio }}">{{ assunto_ramo.dominio }}</a>
+
+                    <p></p>
+                    {% endif %}
+                                        {% for assunto_ramo_ramo in assuntos_ramo_ramo %}
+
+ {% if assunto_ramo == assunto_ramo_ramo.assunto %}
+        {% if 1 == assunto_ramo_ramo.pagina %}
+
+
+
+                    <p></p>
+                           {% endif %}
+
+                    {% endif %}
+                                        {% endfor %}
+
+                                                            {% endfor %}
+</div>
+
+                    {% endfor %}
+
+
+
+
+

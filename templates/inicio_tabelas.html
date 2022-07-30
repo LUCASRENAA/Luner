@@ -1,0 +1,143 @@
+
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+<link rel="style" type="text/css" href="/static/css/style.css">
+ {% include "cabeca.html" %}
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+</head>
+<body >
+
+
+ {% include "padrao_inicio.html" %}
+<script>
+   window.onload = initPage;
+
+function initPage(){
+    var x = document.getElementById("pagina2");
+      var y = document.getElementById("pagina1");
+            var z = document.getElementById("pagina3");
+
+        x.style.display = "none";
+        y.style.display = "block";
+                z.style.display = "none";
+
+}
+
+</script>
+<div class="container">
+  <div class="row">
+    <div class="col-sm">
+<button class="btn btn-primary" onclick="myFunction()">Ver Portas</button>
+    </div>
+    <div class="col-sm">
+ <button class="btn btn-primary" onclick="myFunction2()">Ver ips</button>
+    </div>
+    <div class="col-sm">
+  <button class="btn btn-primary" onclick="myFunction3()">Ver diretorios</button>
+    </div>
+  </div>
+</div>
+  <input class="form-control" id="myInput" type="text" placeholder="Search..">
+
+
+
+  <script>
+        function myFunction() {
+      var x = document.getElementById("pagina2");
+      var y = document.getElementById("pagina1");
+            var z = document.getElementById("pagina3");
+
+
+        x.style.display = "block";
+        y.style.display = "none";
+                        z.style.display = "none";
+
+
+}
+ function myFunction2() {
+      var x = document.getElementById("pagina2");
+      var y = document.getElementById("pagina1");
+            var z = document.getElementById("pagina3");
+
+
+        x.style.display = "none";
+        y.style.display = "block";
+                        z.style.display = "none";
+
+
+
+    }
+
+
+     function myFunction3() {
+      var x = document.getElementById("pagina2");
+      var y = document.getElementById("pagina1");
+            var z = document.getElementById("pagina3");
+
+
+        x.style.display = "none";
+        y.style.display = "none";
+                        z.style.display = "block";
+
+
+
+    }
+  </script>
+
+ <div id="pagina1">
+{% include "tabela_ip.html" %}
+     </div>
+  <div id="pagina2">
+
+{% include "tabela_porta.html" %}
+     </div>
+
+   <div id="pagina3">
+
+{% include "tabela_diretorio.html" %}
+     </div>
+
+       {% include "ffuf.html" %}
+
+<div align="center">
+                 <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#dirb">
+Ffuf
+</button>
+
+                           <button type="button"  class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModal">
+ Scan
+</button>
+
+</div>
+
+
+      {% include "ScanNmap.html" %}
+<p>
+
+</p>
+ <a class="navbar-brand" href="#">
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end" align="center">
+
+
+                  </div>
+
+                     {% include "ScanNmap.html" %}
+       {% include "ffuf.html" %}
+              </a>
+
+                        <a class="navbar-brand" href="#">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end" align="center">
+
+
+                            </div>
+          </a>
+
+ {% include "padrao_fim.html" %}
+
+</body>
+</html>

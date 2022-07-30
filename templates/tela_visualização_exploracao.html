@@ -1,0 +1,43 @@
+
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+<link rel="style" type="text/css" href="/static/css/style.css">
+ {% include "cabeca.html" %}
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+</head>
+<body >
+
+
+ {% include "padrao_inicio.html" %}
+
+
+<p></p>
+ <div id="Computadores" align="center"  style="margin-top:6%">
+
+ <div class="container">
+{% for a in hosts %}
+ <i class="fas fa-desktop fa-7x" >
+
+<p></p>
+        <button   class="btn btn-dark" type="button"  data-toggle="modal" data-target="#exampleModalCenter{{ a.sessao }}" id="botao_ip_id_{{ a.sessao }}"> <a href="/exploit3/{{ a.sessao }}">{{ a.sessao }}: {{ a.ip }}</a>
+            </button></i>
+{% endfor %}
+
+
+ {% include "padrao_fim.html" %}
+</div>
+ </div>
+
+     Procure exploits para criar <a href="/exploit/procurar">Aqui</a>
+
+
+
+        Veja exploits já prontos <a href="/rodarExploits/">Aqui</a>
+</body>
+</html>
+

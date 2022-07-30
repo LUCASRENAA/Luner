@@ -1,0 +1,15 @@
+env/ 
+.idea/
+mydatabase
+venv/
+arquivos/ffuf/*
+arquivos/nmap/*
+arquivos/theHarvester/*
+arquivos/whatweb/*
+arquivos/publico/*
+arquivos/publico/email/*
+arquivos/sqlmap/*
+log
+static/pentests/*
+static/graficos/*
+mydatabase2

@@ -1,0 +1,39 @@
+<div class="collapse" id="navbarToggleExternalContent">
+  <div class="bg-danger p-4">
+
+  </div>
+</div>
+<nav class="navbar navbar-dark bg-danger">
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a href="/inicio/">Menu de ataque </a>
+
+    <i>Menu de ataque </i>
+    <a href="/cofre/">Cofre de senhas </a>
+  <div align="right"><a class="navbar-brand" href="#" >
+
+<select name="select"  onchange="this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);">
+
+{% for redeObjeto in redes %}
+
+{% if redeObjeto.rede.rede == rede.rede %}
+  <option value="{{ redeObjeto.rede.rede }}" selected>{{ redeObjeto.rede.rede }}
+</option>
+
+{% endif %}
+
+
+{% if redeObjeto.rede.rede != rede.rede %}
+  <option value="{{ redeObjeto.rede.rede }}" >{{ redeObjeto.rede.rede }}
+{% endif %}
+
+      {% endfor %}
+      </select>
+      Pentest:  {{ redepentest.pentest.nome }}  <a href="/logout">Sair</a>
+
+
+    </a></div>
+  </div>
+</nav>
