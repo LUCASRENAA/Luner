@@ -77,7 +77,11 @@ python3 manage.py createsuperuser
 ```
 
 
+## Visualização da Arquitetura Luner
+![vuln2.jpg](static/apresentacao_git/DiagramasModelos/arquiteturaluner.png)
 
+## Visualização dos casos de uso do Luner
+![vuln2.jpg](static/apresentacao_git/DiagramasModelos/Diagrama%20de%20caso%20de%20uso.png)
 
 ## Historia
 Criei a ideia do Luner lá para abril de 2021, quando criei alguns scripts automatizados para a realização do curso da 
