@@ -19,7 +19,8 @@ class Checklist(MPTTModel):
 
 class Rede(models.Model):
     rede = models.CharField(max_length=50)
-
+    def __str__(self):
+        return (f'{self.rede}')
 class ChecklistRede(MPTTModel):
         name = models.CharField(max_length=100, unique=True)
         parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
@@ -198,6 +199,9 @@ class CVE_IP(models.Model):
 
 class Pentest(models.Model):
     nome = models.CharField(max_length=50)
+    def __str__(self):
+        return (f'{self.nome}')
+
     class tipo(models.IntegerChoices):
         Web = 1
         Infraestrutura = 2
@@ -206,6 +210,7 @@ class Pentest(models.Model):
     automatico = models.IntegerField(default=0)
 
     imagem = models.ImageField(upload_to='static/pentests', blank=True)
+
 
 class Pentest_Rede(models.Model):
     rede = models.ForeignKey(Rede, models.CASCADE)

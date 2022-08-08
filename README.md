@@ -1,10 +1,15 @@
-# Luner
+# Luner : um mecanismo para detecção de vulnerabilidades em serviços de rede}
 ## O aplicativo para pentesters
 
 Hey, o luner é uma aplicação web feita em Python (Django), para automatizar processos
-do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas de pentest.
+do pentest, integrado com o Metasploit, Nmap, ffuf e entre outras ferramentas de pentest.
 
-# Requisitos
+
+## Objetivos
+A aplicação Luner tem como objetivo automatizar o processo de pentest
+
+
+# Requisitos do sistema
 - [x] Tela inicial
 - [x] Mostrar os ips e portas encontradas
 - [x] Integrar com o metaexploit
@@ -17,39 +22,9 @@ do pentest, integrado com o metaexploit, nmap, ffuf e entre outras ferramentas d
 - [x] Verificar os query parameters e testar se são vulneraveis a sql injection com sqlmap
 - [ ] Criar automação para achar mais diretorios e explorar sql injection
 
-## Tela inicial, onde vai ser exibidos os ips e as portas abertas (Talvez vou colocar os diretorios aqui também)
-![vuln2.jpg](static/apresentacao_git/tela_inicial_enumeracao.png)
-![vuln2.jpg](static/apresentacao_git/tela_sem_ip.png)
+# Requisitos para rodar o sistema
 
-### Form do nmap e do ffuf
-
-![vuln2.jpg](static/apresentacao_git/ffuf.png)
-![vuln2.jpg](static/apresentacao_git/scanmap.png)
-
-## Tela exploração (Web shell)
-
-![vuln2.jpg](static/apresentacao_git/web_shell.png)
-
-
-# Tela de Documentação
-
-## Todas as redes
-![vuln2.jpg](static/apresentacao_git/documentacao_tela_todos_os_pentests.jpeg)
-
-## Todos os ip de uma rede
-![vuln2.jpg](static/apresentacao_git/ips_de_uma_rede.jpeg)
-
-## Somente 1 ip
-![vuln2.jpg](static/apresentacao_git/somente_1_ip.jpeg)
-
-## Observações
-Você pode desejar salvar o relatório de 1 ip como pdf, temos um exemplo em /static/apresentacao_git/ip_172_16_1_245.pdf
-
-### Para salvar como pdf clique em imprimir
-![vuln2.jpg](static/apresentacao_git/imprimir.png)
-
-### E depois em clicar em salvar como pdf
-![vuln2.jpg](static/apresentacao_git/salvar_como_pdf.jpeg)
+Minha sugestão, rode a aplicação no Kali Linux
 
 
 <h1>Como instalar?</h1>
@@ -57,7 +32,36 @@ Você pode desejar salvar o relatório de 1 ip como pdf, temos um exemplo em /st
 Ainda em desenvolvimento
 
 
-## Como usar?
+## Prova de conceito
+
+O primeiro video é o de configuração
+Você também pode assistir o video caso precise
+```sh
+https://drive.google.com/file/d/19tHDc_8zIyw1g3qHjflUmDWqY2hQqlRJ/view?usp=sharing
+```
+
+## Configuração do Sistema
+
+Criar um objeto chamado Pentest_Rede
+
+Na URL:
+http://127.0.0.1:8000/admin/core/pentest_rede/add/
+
+Como feito na próxima figura
+![vuln2.jpg](static/apresentacao_git/configurar.jpeg)
+
+
+## Invadindo um sistema
+
+O segundo video é da exploração da máquina Blue do TryHackMe.
+
+Você pode acessar a sala atraveś desse link aqui:
+https://tryhackme.com/room/blue
+
+```sh
+https://drive.google.com/file/d/1LVWx4ILagcq-V6haKpAXiRJFFvOl41OT/view?usp=sharing
+```
+
 
 ### Primeiro acesso
 
@@ -70,4 +74,47 @@ python3 manage.py createsuperuser
 ```
 
 
+
+
+## Historia
+Criei a ideia do Luner lá para abril de 2021, quando criei alguns scripts automatizados para a realização do curso da 
+desec, esses scripts automatizados vocês podem ver aqui https://github.com/LUCASRENAA/NanerPentest, e depois foi se 
+construindo a ideia do Luner, onde existiria uma aplicação de forma fácil automatizar processos do pentest.
+
+No inicio as automações eram voltadas para o processo de enumeração e buscar informações, como busca de e-mails e de IPS.
+
+E logo depois, surgiu a ideia de juntar esses scripts em python em um sistema web que em tese seria mais fácil para
+manipulação e de fácil usabilidade por parte do usuário. E assim surgiu o Luner.
+
+## Problemas
+
+A criação do Luner foi um pouco díficil no incio, por falta de habilidade técnica no front, e não consegui trazer aquela
+usabilidade que desejava no inicio do projeto. Também relacionada a clean code, muito código do sistema pode ser limpo e
+melhorado.
+
+Para realizar os scans de forma em background, optei por deixar o processo seguir em background através do & no fim do comando
+mas ainda não sei se foi a melhor opção, e verificar se o scan realizou ou não através de um middleware, e para ler o arquivo
+tive que criar um script de leitura de xml que a base foi essa aqui https://github.com/LUCASRENAA/lerXmlNmap
+
+
+## Trabalhos futuros
+
+Pretendo criar botões de automatizações com funcionalidades bem especificas, como procurar pro bancos no scan, e uma opção bem
+geral que ao clicar, será realizado a enumeração automaticamente e a tentativa de exploração através do metasploit automaticamente
+
+Melhoria do front também seria uma boa.
+
+Subir o ambiente numa imagem docker facilitaria o processo de instalação da ferramenta
+
+
+
 Ainda em desenvolvimento
+
+
+
+
+## License
+
+MIT
+
+**Free Software**

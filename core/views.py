@@ -328,6 +328,8 @@ def ataque_rede(request,rede):
 
 @login_required(login_url='/login/')
 def inicio(request,rede):
+
+
     usuario = User.objects.get(id=request.user.id)
     if rede == "WQFQWFUQWHFQWHFQWHFIWIF":
         try:
@@ -2358,8 +2360,24 @@ def LigarMetaexploit():
     try:
         client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
         #os.system(f'msfrpcd -P {SenhaMsfConsole.objects.get(id=1).senha} -S')
+        os.system("mkdir arquivos")
+        os.system("mkdir arquivos/ffuf")
+        os.system("mkdir arquivos/nmap")
+        os.system("mkdir arquivos/publico")
+        os.system("mkdir arquivos/sqlmap")
+        os.system("mkdir arquivos/theHarvester")
+        os.system("mkdir arquivos/whatweb")
+
 
     except:
+        os.system("mkdir arquivos")
+        os.system("mkdir arquivos/ffuf")
+        os.system("mkdir arquivos/nmap")
+        os.system("mkdir arquivos/publico")
+        os.system("mkdir arquivos/sqlmap")
+        os.system("mkdir arquivos/theHarvester")
+        os.system("mkdir arquivos/whatweb")
+
         try:
             SenhaMsfConsole.objects.create(id=1,
                                            senha ="Z1rS5DW#9N1e" )
