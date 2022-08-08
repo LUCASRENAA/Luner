@@ -8,6 +8,11 @@ do pentest, integrado com o Metasploit, Nmap, ffuf e entre outras ferramentas de
 ## Objetivos
 A aplicação Luner tem como objetivo automatizar o processo de pentest
 
+## Artigo
+
+Está no link do Drive: https://drive.google.com/file/d/1OVfwFcYgoPxUyj6H9uVLmtna67ZRtn9n/view?usp=sharing
+[Intro.pdf](https://github.com/LUCASRENAA/Luner/tree/dev/static/apresentacao_git/LunerArtigo.pdf).
+
 
 # Requisitos do sistema
 - [x] Tela inicial
@@ -34,10 +39,16 @@ Ainda em desenvolvimento
 
 ## Prova de conceito
 
-O primeiro video é o de configuração
-Você também pode assistir o video caso precise
+O primeiro video é o de configuração  e o segundo video é da exploração da máquina Blue do TryHackMe.
+
+Você pode acessar a sala atraveś desse link aqui:
+https://tryhackme.com/room/blue
+
+Você também pode assistir os videos caso precise
 ```sh
 https://drive.google.com/file/d/19tHDc_8zIyw1g3qHjflUmDWqY2hQqlRJ/view?usp=sharing
+https://drive.google.com/file/d/1LVWx4ILagcq-V6haKpAXiRJFFvOl41OT/view?usp=sharing
+
 ```
 
 ## Configuração do Sistema
@@ -53,15 +64,7 @@ Como feito na próxima figura
 
 ## Invadindo um sistema
 
-O segundo video é da exploração da máquina Blue do TryHackMe.
-
-Você pode acessar a sala atraveś desse link aqui:
-https://tryhackme.com/room/blue
-
-```sh
-https://drive.google.com/file/d/1LVWx4ILagcq-V6haKpAXiRJFFvOl41OT/view?usp=sharing
-```
-
+Ainda em desenvolvimento
 
 ### Primeiro acesso
 
