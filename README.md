@@ -69,11 +69,14 @@ Ainda em desenvolvimento
 ### Primeiro acesso
 
 ```
+git clone https://github.com/LUCASRENAA/Luner.git
+cd Luner
 sudo apt-get install libpq-dev python3-dev
 sudo pip install psycopg2
 pip3 install -r requirements.txt 
 python3 manage.py migrate
 python3 manage.py createsuperuser 
+python3 manage.py runserver
 ```
 
 
