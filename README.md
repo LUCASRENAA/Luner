@@ -71,6 +71,8 @@ Ainda em desenvolvimento
 ```
 git clone https://github.com/LUCASRENAA/Luner.git
 cd Luner
+echo "export SECRET_KEY='$(openssl rand -hex 40)'" > .DJANGO_SECRET_KEY
+source .DJANGO_SECRET_KEY
 sudo apt-get install libpq-dev python3-dev
 sudo pip install psycopg2
 pip3 install -r requirements.txt 
