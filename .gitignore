@@ -13,3 +13,4 @@ log
 static/pentests/*
 static/graficos/*
 mydatabase2
+.DJANGO_SECRET_KEY
