@@ -10,7 +10,7 @@ A aplicação Luner tem como objetivo automatizar o processo de pentest
 
 ## Artigo
 
-Está no link do Drive: https://drive.google.com/file/d/1OVfwFcYgoPxUyj6H9uVLmtna67ZRtn9n/view?usp=sharing
+Está no link do Drive: https://drive.google.com/file/d/1cA3i0zCaBbVTTKcXxzUfGKd6nNCSpzqH/view?usp=sharing
 [Intro.pdf](https://github.com/LUCASRENAA/Luner/tree/dev/static/apresentacao_git/LunerArtigo.pdf).
 
 
