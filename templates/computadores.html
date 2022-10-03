@@ -95,6 +95,8 @@
               <th scope="col">Versão</th>
 
       <th scope="col">Status</th>
+              <th scope="col">Horário do scan</th>
+
     </tr>
   </thead>
   <tbody>
@@ -112,6 +114,7 @@
               <td>{{ porta.produto }}</td>
               <td>{{ porta.versao }}</td>
               <td>{{ porta.status }}</td>
+              <td>{{ porta.data_evento }}</td>
 
 
           {% if 1 == porta.vulneravel %}
