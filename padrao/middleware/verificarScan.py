@@ -21,6 +21,8 @@ class VerificarScan(MiddlewareMixin):
   def process_view(self,request, func, args, kwargs):
     # Lista de IPs autorizados
     a = xmlBancoVerificar()
+
+
     b = dirbBancoVerificar()
     b = sqlmapVerificar()
 

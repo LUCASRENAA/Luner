@@ -298,6 +298,7 @@ class ExploitRodar(models.Model):
     exploit = models.CharField(max_length=100)
     payload = models.CharField(max_length=100)
     feito = models.IntegerField(default=0)
+    usuario = models.ForeignKey(User, models.CASCADE)
 
 
 class Exploit_Payload(models.Model):

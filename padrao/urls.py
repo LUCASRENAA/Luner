@@ -124,5 +124,6 @@ urlpatterns = [
                   path('vulnerabilidade/id/<id>/submit', views.comunidade_vuln),
 
                   path('vulnerabilidade/mudar/<id>/submit', views.mudarTratamentoVuln),
+                  path("webPentest/", include("webPentest.urls")),
 
               ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

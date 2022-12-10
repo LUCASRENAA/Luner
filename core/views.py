@@ -111,33 +111,37 @@ def scan_historico(request):
 
 @login_required(login_url='/login/')
 def scan_id_historico(request,id):
+
     scan = Scan.objects.get(id=int(id))
-    ips,vulnerabilidades_vetor,cve_ips_vetor,sistemas_operacionais_vetor,ip_hostname_vetor = lerArquivoXmlHistorico(scan.dataAgora,scan.usuario,"")
+    if request.user == scan.usuario or scan.usuario.is_superuser != True:
+        ips,vulnerabilidades_vetor,cve_ips_vetor,sistemas_operacionais_vetor,ip_hostname_vetor = lerArquivoXmlHistorico(scan.dataAgora,scan.usuario,"")
 
-    critica = 0
-    alta = 0
-    intermediaria = 0
-    baixa = 0
-    informativa = 0
-    for vuln in vulnerabilidades_vetor:
-        cvss_inteiro = float(str(vuln.getIntegerTratarString()).split(" ")[0])
-        if float(cvss_inteiro) >= 7.5:
-            critica = critica + 1
-        if float(cvss_inteiro) < 7.5 and float(cvss_inteiro) >= 5:
-            alta = alta + 1
-        if float(cvss_inteiro) < 5 and float(cvss_inteiro) >= 2.5:
-            intermediaria = intermediaria + 1
+        critica = 0
+        alta = 0
+        intermediaria = 0
+        baixa = 0
+        informativa = 0
+        for vuln in vulnerabilidades_vetor:
+            cvss_inteiro = float(str(vuln.getIntegerTratarString()).split(" ")[0])
+            if float(cvss_inteiro) >= 7.5:
+                critica = critica + 1
+            if float(cvss_inteiro) < 7.5 and float(cvss_inteiro) >= 5:
+                alta = alta + 1
+            if float(cvss_inteiro) < 5 and float(cvss_inteiro) >= 2.5:
+                intermediaria = intermediaria + 1
 
-        if float(cvss_inteiro) < 2.5 and float(cvss_inteiro) > 0:
-            baixa = baixa + 1
+            if float(cvss_inteiro) < 2.5 and float(cvss_inteiro) > 0:
+                baixa = baixa + 1
 
-        if float(cvss_inteiro) == 0:
-            informativa = informativa + 1
+            if float(cvss_inteiro) == 0:
+                informativa = informativa + 1
 
-    dados = {'ips':ips,"vulns":vulnerabilidades_vetor,"cves":cve_ips_vetor,"sistemas":sistemas_operacionais_vetor,
-             "hostnames":ip_hostname_vetor,'pagina':1,
-             "critica":critica,"alta":alta,"intermediaria":intermediaria,"baixa":baixa,"informativa":informativa}
-    return render(request, 'historico_scan.html', dados)
+        dados = {'ips':ips,"vulns":vulnerabilidades_vetor,"cves":cve_ips_vetor,"sistemas":sistemas_operacionais_vetor,
+                 "hostnames":ip_hostname_vetor,'pagina':1,
+                 "critica":critica,"alta":alta,"intermediaria":intermediaria,"baixa":baixa,"informativa":informativa}
+        return render(request, 'historico_scan.html', dados)
+    else:
+        return HttpResponse("Você não tem permissão")
 
 
 @login_required(login_url='/login/')
@@ -1347,21 +1351,25 @@ def verificarArquivoSqlmap(dataAgora, usuario):
                         validar = validar + 1
                 parametro = parametro[:-1]
         except:
-            saida = subprocess.check_output(f'cat  "{target_file}" | grep "Parameter:"',
-                                            shell=True).decode("UTF-8")
-            parametro = ""
-            validar = 0
-            for percorrer in saida.split(':')[1]:
-                print(percorrer)
-                if validar == 1:
-                    parametro = parametro + percorrer
-                if percorrer == " ":
-                    validar = validar + 1
-            parametro = parametro
+            try:
+                saida = subprocess.check_output(f'cat  "{target_file}" | grep "Parameter:"',
+                                                shell=True).decode("UTF-8")
+                parametro = ""
+                validar = 0
+                for percorrer in saida.split(':')[1]:
+                    print(percorrer)
+                    if validar == 1:
+                        parametro = parametro + percorrer
+                    if percorrer == " ":
+                        validar = validar + 1
+                parametro = parametro
 
-            pass
+                pass
+            except:
+                return 0
 
-        print(parametro)
+
+        #print(parametro)
         parametro = parametro.replace(" ","")
         queryparameters = QueryParameteres.objects.filter(diretorio=scan.diretorio)
 
@@ -2263,7 +2271,7 @@ def rodandoExploit(request):
 @login_required(login_url='/login/')
 def rodandoExploitCerto(request):
     client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
-    objeto = ExploitRodar.objects.get(id=request.POST.get('objeto'))
+    objeto = ExploitRodar.objects.get(id=request.POST.get('objeto'),usuario=request.user)
 
     exploit = client.modules.use('exploit', objeto.exploit)
     payload = client.modules.use('payload',objeto.payload)
@@ -2302,7 +2310,7 @@ def rodandoExploit(request):
     exploit  = client.modules.use('exploit', request.POST.get('exploit'))
     payload = client.modules.use('payload', request.POST.get('payload'))
 
-    exploit_rodar = ExploitRodar.objects.create(nome='Criado Via views.py', exploit= request.POST.get('exploit'), payload=request.POST.get('payload'))
+    exploit_rodar = ExploitRodar.objects.create(nome='Criado Via views.py', exploit= request.POST.get('exploit'), payload=request.POST.get('payload'),usuario=request.user)
     for requestinho in request.POST:
         print(requestinho)
 
@@ -2441,17 +2449,17 @@ def theHarvester(request,dominio,rede_vpn):
 
 
 def verExploitsRodar(request):
-    opcoes = ExploitRodar.objects.all()
+    opcoes = ExploitRodar.objects.filter(usuario=request.user)
 
     return render(request,'rodarExploits.html',{'opcoes':opcoes})
 
 
 def rodar(request,id):
-    exploit_objeto = ExploitRodar.objects.get(id=id)
+    exploit_objeto = ExploitRodar.objects.get(id=id,usuario=request.user)
 
 
 
-    client = MsfRpcClient('Z1rS5DW#9N1e', ssl=False)
+    client = MsfRpcClient(SenhaMsfConsole.objects.get(id=1).senha, ssl=False)
 
     exploit = client.modules.use('exploit', exploit_objeto.exploit)
 
@@ -2900,7 +2908,8 @@ def relatorio_completo(request,id):
 
     nome = {"usuario": request.user,
                     "materia": pentest_objeto.id,
-            "relatorios":relatorios
+            "relatorios":relatorios,
+            "pentest":pentest_objeto
 
                 }
     nome["scans"] = verificarScan()
@@ -2979,9 +2988,12 @@ def assunto_ip(request,id,ip):
                     "cve_ip":CVE_IP.objects.filter(ip=ip_vai),
                 "hash_veio":hash_veio,
                 "hash_veio2": hash_veio2,
-                "sistema_operacional":sistema_vai
+                "sistema_operacional":sistema_vai,
+                "pentest":pentest_objeto
 
                 }
+
+        print(pentest_objeto)
         nome["scans"] = verificarScan()
 
 
