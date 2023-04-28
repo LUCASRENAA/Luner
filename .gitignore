@@ -1,6 +1,7 @@
 env/ 
 .idea/
 mydatabase
+mydatabase.db
 venv/
 arquivos/ffuf/*
 arquivos/nmap/*
@@ -15,3 +16,4 @@ static/graficos/*
 mydatabase2
 .DJANGO_SECRET_KEY
 mydatabase3
+requirements2.txt
