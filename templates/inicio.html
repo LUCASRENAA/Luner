@@ -17,6 +17,38 @@
 
  {% include "computadores.html" %}
 
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal20">
+  Importar dados de um arquivo xml do nmap
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal20" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Importar dados</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/handle_xml_upload/" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <input type="file" name="xmlfile">
+<input class="form-control" name="rede_vpn" value="{{ rede_vpn.id }}" hidden>
+<input class="form-control" name="comando" value="">
+
+    <input type="submit" value="upload xml file">
+</form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
        {% include "ffuf.html" %}
 
