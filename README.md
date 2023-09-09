@@ -77,6 +77,7 @@ source .DJANGO_SECRET_KEY
 sudo apt-get install libpq-dev python3-dev
 sudo pip install psycopg2
 pip3 install -r requirements.txt 
+mkdir static/graficos
 python3 manage.py migrate
 python3 manage.py createsuperuser 
 python3 manage.py runserver
