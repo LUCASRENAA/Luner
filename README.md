@@ -69,6 +69,7 @@ Ainda em desenvolvimento
 ### Primeiro acesso
 
 ```
+
 git clone https://github.com/LUCASRENAA/Luner.git
 cd Luner
 echo "export SECRET_KEY='$(openssl rand -hex 40)'" > .DJANGO_SECRET_KEY
@@ -80,8 +81,11 @@ python3 manage.py migrate
 python3 manage.py createsuperuser 
 python3 manage.py runserver
 ```
-
-
+Opcional
+```
+apt install golang
+go get -u github.com/tomnomnom/hacks/html-tool
+```
 ## Visualização da Arquitetura Luner
 ![vuln2.jpg](static/apresentacao_git/DiagramasModelos/arquiteturaluner.png)
 
