@@ -380,7 +380,56 @@ def inicio(request,rede):
         dados = {'redepentest':rede_pentest, 'hostnames':hostnames,
                  'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
         return render(request,'inicio.html',dados)
+@login_required(login_url='/login/')
+def inicio2(request,rede):
 
+
+    usuario = User.objects.get(id=request.user.id)
+    if rede == "WQFQWFUQWHFQWHFQWHFIWIF":
+        try:
+            rede = Pentest_Rede.objects.filter(usuario=usuario)[0].rede.rede
+            print(rede)
+            return redirect('/inicio/'+rede)
+        except:
+            return HttpResponse("crie uma rede associada a esse usuário")
+    else:
+        rede = requests.utils.unquote(rede)
+        try:
+            rede_objeto = Rede.objects.get(rede=rede)
+        except:
+            return  HttpResponse("Rede não existe")
+        try:
+            rede = Pentest_Rede.objects.get(rede=rede_objeto,usuario=usuario)
+        except:
+            return HttpResponse("crie um pentest para essa rede")
+
+
+
+        ips_ativos = IP.objects.filter(rede =rede_objeto,ativo="up" )
+        ips_desligados = IP.objects.filter(ativo = "",rede = rede_objeto)
+        diretorios = Diretorios.objects.filter(ip__rede = rede_objeto)
+        print(diretorios)
+
+        redes = Pentest_Rede.objects.filter(usuario=usuario)
+        whatwebTotal =  WhatWebIP.objects.filter(ip__rede = rede_objeto)
+
+        class PortasQuantidades:
+            def __init__(self, ip, quantidade):
+                self.ip = ip
+                self.quantidade = quantidade
+
+        portas_quantidades = []
+        for ips_quantidade in ips_ativos:
+            portas_quantidades.append(
+                PortasQuantidades(ips_quantidade, len(Porta.objects.filter(ip=ips_quantidade, ativo=1).exclude(status='closed').exclude(status='filtered'))))
+
+        rede_pentest = Pentest_Rede.objects.filter(rede=rede_objeto)
+        queryparameteres = QueryParameteres.objects.all()
+
+        hostnames = Hostname_IP.objects.filter(ip__rede = rede_objeto)
+        dados = {'redepentest':rede_pentest, 'hostnames':hostnames,
+                 'queryparameteres':queryparameteres,'ips': ips_ativos,'ips_desligados':ips_desligados,'diretorios':diretorios,'rede':rede_objeto,'redes':redes,'whatwebTotal':whatwebTotal,'portas':Porta.objects.filter(ativo=1),'rede_vpn':rede_objeto,'portas_quantidades':portas_quantidades}
+        return render(request,'inicio_barradolado.html',dados)
 @login_required(login_url='/login/')
 def inicio_tabelas(request,rede):
     usuario = User.objects.get(id=request.user.id)

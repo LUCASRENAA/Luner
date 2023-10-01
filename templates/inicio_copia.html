@@ -1,0 +1,91 @@
+
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Lilita One' rel='stylesheet'>
+<link rel="style" type="text/css" href="/static/css/style.css">
+ {% include "cabeca.html" %}
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+</head>
+<body >
+
+
+ {% include "padrao_inicio.html" %}
+
+ {% include "computadores.html" %}
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal20">
+  Importar dados de um arquivo xml do nmap
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal20" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Importar dados</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/handle_xml_upload/" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <input type="file" name="xmlfile">
+<input class="form-control" name="rede_vpn" value="{{ rede_vpn.id }}" hidden>
+<input class="form-control" name="comando" value="">
+
+    <input type="submit" value="upload xml file">
+</form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+       {% include "ffuf.html" %}
+
+<div align="center">
+                 <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#dirb">
+Ffuf
+</button>
+
+                           <button type="button"  class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModal">
+ Scan
+</button>
+
+</div>
+
+
+      {% include "ScanNmap.html" %}
+<p>
+
+</p>
+ <a class="navbar-brand" href="#">
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end" align="center">
+
+
+                  </div>
+
+                     {% include "ScanNmap.html" %}
+       {% include "ffuf.html" %}
+              </a>
+
+                        <a class="navbar-brand" href="#">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end" align="center">
+
+
+                            </div>
+          </a>
+
+ {% include "padrao_fim.html" %}
+
+</body>
+</html>

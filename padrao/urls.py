@@ -78,7 +78,9 @@ urlpatterns = [
                   path('parserSite/<id>', views.parserSite),
                   path('sqlmap/<id>', views.sqlmap),
 
-                  path('inicio/<rede>',views.inicio),
+                  path('inicio2/<rede>',views.inicio),
+                  path('inicio/<rede>', views.inicio2),
+
                   path('inicio_tabelas/<rede>', views.inicio_tabelas),
 
                   path('scan/<id>', views.scan_id_historico),

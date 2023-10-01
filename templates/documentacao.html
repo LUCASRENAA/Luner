@@ -121,7 +121,7 @@
   <body>
 
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Luner</a>
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/inicio">Luner</a>
       <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
       <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap">
@@ -145,24 +145,10 @@
 
             </ul>
 
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Saved reports</span>
-              <a class="d-flex align-items-center text-muted" href="#">
-                <span data-feather="plus-circle"></span>
-              </a>
-            </h6>
-            <ul class="nav flex-column mb-2">
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                  <span data-feather="file-text"></span>
-                  Scans sendo feitos
-                </a>
-        {% for scan in scans %}
-               <h6>Range ip - {{ scan.ip }}<p></p> Data do inicio - {{ scan.dataAgora }}</h6>
-        <p></p>
-        {% endfor %}
-              </li>
-            </ul>
+
+                {% include "nav_a_esquerda.html" %}
+
+
           </div>
         </nav>
 
