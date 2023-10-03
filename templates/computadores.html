@@ -55,7 +55,7 @@
         <button   class="btn btn-dark" type="button"  data-toggle="modal" data-target="#exampleModalCenter{{ ip.id }}" id="botao_ip_id_{{ ip.id }}"> IP: {{ ip.ip }}  {% for hostname in hostnames %}
             {% if hostname.ip.ip == ip.ip %}
             <script>
-                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ hostname.hostname }}";
+                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ ip.ip }} ({{ hostname.hostname }})";
             </script>
             {% endif %}
 
@@ -65,7 +65,7 @@
                         {% if hostname.exibir == 1 %}
 
             <script>
-                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ hostname.hostname }}";
+                document.getElementById("botao_ip_id_{{ ip.id }}").innerHTML="{{ ip.ip }} ({{ hostname.hostname }})";
             </script>
             {% endif %}
 
@@ -96,7 +96,7 @@
             <h1>Hostnames</h1></p>
 {% for hostname in hostnames %}
             {% if hostname.ip.ip == ip.ip %}
-         <p>{{ hostname.hostname }}</p>
+         <p>{{ hostname.ip.ip }} ({{ hostname.hostname }})</p>
         {% endif %}
 
         {% endfor %}
